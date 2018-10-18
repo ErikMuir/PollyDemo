@@ -1,5 +1,5 @@
 # POLLY
-Polly is a .NET resilience and transient fault-handling library that allows developers to express policies in a fluent and thread-safe manner.
+Polly is a .NET resilience and transient-fault-handling library that allows developers to express policies in a fluent and thread-safe manner.
 
 ## What is a Resilience Framework?
 - Recovery if possible
