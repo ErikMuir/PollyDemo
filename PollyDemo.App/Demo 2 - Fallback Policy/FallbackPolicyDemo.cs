@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MuirDev.ConsoleTools.Logger;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Fallback;
 using Polly.Timeout;
@@ -15,6 +16,7 @@ namespace PollyDemo.App.Demos
     public class FallbackPolicyDemo : IDemo
     {
         private HttpClient _httpClient;
+        private static readonly Logger _logger = new Logger();
         private readonly FallbackPolicy<HttpResponseMessage> _fallbackPolicy;
         private readonly int _fallbackResult = 0;
 
@@ -34,7 +36,7 @@ namespace PollyDemo.App.Demos
 
             _httpClient = GetHttpClient();
 
-            Utils.WriteRequest(ActionType.Sending, HttpMethod.Get, Constants.FailRequest);
+            _logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailRequest);
 
             var response = await _fallbackPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.FailRequest));
             var content = null as object;
@@ -44,7 +46,7 @@ namespace PollyDemo.App.Demos
             else if (response.Content != null)
                 content = await response.Content.ReadAsStringAsync();
 
-            Utils.WriteResponse(ActionType.Received, response.StatusCode, content);
+            _logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }
 
         private HttpClient GetHttpClient()

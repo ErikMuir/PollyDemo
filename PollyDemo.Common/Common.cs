@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MuirDev.ConsoleTools.Logger;
+using System;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Http;
@@ -38,35 +39,41 @@ namespace PollyDemo.Common
         Task Run();
     }
 
-    public static class Utils
+    public static class LoggerExtensions
     {
-        public static void WriteRequest(ActionType actionType, HttpMethod method, string endpoint, bool isEndOfLine = true)
+        private static readonly LogOptions _noEOL = new LogOptions
         {
-            Console.WriteLine();
-            Console.Write($"{actionType} request: ");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"{method.ToString().ToUpper()} {Constants.BaseAddress}{endpoint}");
-            if (actionType == ActionType.Sending) Console.Write(" ...");
-            Console.ResetColor();
-            if (isEndOfLine) Console.WriteLine();
+            IsEndOfLine = false,
+        };
+        
+        public static void LogRequest(this Logger logger, ActionType actionType, HttpMethod method, string endpoint)
+        {
+            logger.LineFeed();
+            logger.Info($"{actionType} request: ", _noEOL);
+            logger.Warning($"{method.ToString().ToUpper()} {Constants.BaseAddress}{endpoint}", _noEOL);
+            if (actionType == ActionType.Sending) logger.Warning(" ...", _noEOL);
+            logger.LineFeed();
         }
 
-        public static void WriteResponse(ActionType actionType, HttpStatusCode statusCode, object content, bool isEndOfLine = true)
+        public static void LogResponse(this Logger logger, ActionType actionType, HttpStatusCode statusCode, object content)
         {
-            Console.Write($"{actionType} response: ");
+            logger.Info($"{actionType} response: ", _noEOL);
             var isSuccessStatusCode = (int)statusCode >= 200 && (int)statusCode < 300;
-            Console.ForegroundColor = isSuccessStatusCode ? ConsoleColor.Green : ConsoleColor.Red;
-            Console.Write($"{(int)statusCode} {statusCode}");
-            if (content != null) Console.Write($": {content}");
-            Console.ResetColor();
-            if (isEndOfLine) Console.WriteLine();
+            var logOptions = new LogOptions
+            {
+                ForegroundColorOverride = isSuccessStatusCode 
+                    ? ConsoleColor.Green 
+                    : ConsoleColor.Red,
+                IsEndOfLine = false,
+            };
+            logger.Custom($"{(int)statusCode} {statusCode}", logOptions);
+            if (content != null) logger.Custom($": {content}", logOptions);
+            logger.LineFeed();
         }
 
-        public static void WriteException(Exception exception)
+        public static void LogException(this Logger logger, Exception exception)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"{exception.GetType()}: {exception.Message}");
-            Console.ResetColor();
+            logger.Error($"{exception.GetType()}: {exception.Message}");
         }
     }
 }

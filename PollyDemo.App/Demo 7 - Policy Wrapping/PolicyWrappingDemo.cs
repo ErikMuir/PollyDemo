@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MuirDev.ConsoleTools.Logger;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Fallback;
 using Polly.Retry;
@@ -18,6 +19,7 @@ namespace PollyDemo.App.Demos
     public class PolicyWrappingDemo : IDemo
     {
         private HttpClient _httpClient;
+        private static readonly Logger _logger = new Logger();
         private readonly PolicyWrap<HttpResponseMessage> _policy;
         private readonly TimeoutPolicy _timeoutPolicy;
         private readonly RetryPolicy<HttpResponseMessage> _retryPolicy;
@@ -49,7 +51,7 @@ namespace PollyDemo.App.Demos
 
             _httpClient = GetHttpClient();
 
-            Utils.WriteRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowRequest);
+            _logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowRequest);
 
             //var response =
             //    await
@@ -69,7 +71,7 @@ namespace PollyDemo.App.Demos
             else if (response.Content != null)
                 content = await response.Content.ReadAsStringAsync();
 
-            Utils.WriteResponse(ActionType.Received, response.StatusCode, content);
+            _logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }
 
         private HttpClient GetHttpClient()
