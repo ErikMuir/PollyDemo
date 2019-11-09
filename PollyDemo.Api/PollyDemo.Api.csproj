@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.6" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.1.1" />
-    <PackageReference Include="MuirDev.ConsoleTools.Logger" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>

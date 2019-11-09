@@ -1,4 +1,4 @@
-﻿using MuirDev.ConsoleTools.Logger;
+﻿using MuirDev.ConsoleTools;
 using System;
 using System.ComponentModel;
 using System.Net;
@@ -14,15 +14,6 @@ namespace PollyDemo.Common
         public const string IrregularRequest = "irregular/1234";
         public const string AuthRequest = "auth/1234";
         public const string SlowRequest = "slow/1234";
-        public const string Demo1 = "Without Polly";
-        public const string Demo2 = "Fallback Policy";
-        public const string Demo3 = "Retry Policy";
-        public const string Demo4 = "Wait and Retry Policy";
-        public const string Demo5 = "Policy Delegates";
-        public const string Demo6 = "Timeout Policy";
-        public const string Demo7 = "Policy Wrapping";
-        public const string Demo8 = "Circuit Breaker Fails";
-        public const string Demo9 = "Circuit Breaker Recovers";
     }
 
     public enum ActionType
@@ -39,41 +30,41 @@ namespace PollyDemo.Common
         Task Run();
     }
 
-    public static class LoggerExtensions
+    public static class Logger
     {
         private static readonly LogOptions _noEOL = new LogOptions
         {
             IsEndOfLine = false,
         };
-        
-        public static void LogRequest(this Logger logger, ActionType actionType, HttpMethod method, string endpoint)
+
+        public static void LogRequest(ActionType actionType, HttpMethod method, string endpoint)
         {
-            logger.LineFeed();
-            logger.Info($"{actionType} request: ", _noEOL);
-            logger.Warning($"{method.ToString().ToUpper()} {Constants.BaseAddress}{endpoint}", _noEOL);
-            if (actionType == ActionType.Sending) logger.Warning(" ...", _noEOL);
-            logger.LineFeed();
+            ConsoleTools.LineFeed();
+            ConsoleTools.Info($"{actionType} request: ", _noEOL);
+            ConsoleTools.Warning($"{method.ToString().ToUpper()} {Constants.BaseAddress}{endpoint}", _noEOL);
+            if (actionType == ActionType.Sending) ConsoleTools.Warning(" ...", _noEOL);
+            ConsoleTools.LineFeed();
         }
 
-        public static void LogResponse(this Logger logger, ActionType actionType, HttpStatusCode statusCode, object content)
+        public static void LogResponse(ActionType actionType, HttpStatusCode statusCode, object content)
         {
-            logger.Info($"{actionType} response: ", _noEOL);
+            ConsoleTools.Info($"{actionType} response: ", _noEOL);
             var isSuccessStatusCode = (int)statusCode >= 200 && (int)statusCode < 300;
             var logOptions = new LogOptions
             {
-                ForegroundColorOverride = isSuccessStatusCode 
-                    ? ConsoleColor.Green 
+                ForegroundColor = isSuccessStatusCode
+                    ? ConsoleColor.Green
                     : ConsoleColor.Red,
                 IsEndOfLine = false,
             };
-            logger.Custom($"{(int)statusCode} {statusCode}", logOptions);
-            if (content != null) logger.Custom($": {content}", logOptions);
-            logger.LineFeed();
+            ConsoleTools.Info($"{(int)statusCode} {statusCode}", logOptions);
+            if (content != null) ConsoleTools.Info($": {content}", logOptions);
+            ConsoleTools.LineFeed();
         }
 
-        public static void LogException(this Logger logger, Exception exception)
+        public static void LogException(Exception exception)
         {
-            logger.Error($"{exception.GetType()}: {exception.Message}");
+            ConsoleTools.Failure($"{exception.GetType()}: {exception.Message}");
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using MuirDev.ConsoleTools.Logger;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Polly;
 using Polly.Retry;
 using PollyDemo.Common;
@@ -14,7 +13,6 @@ namespace PollyDemo.App.Demos
     public class PolicyDelegatesDemo : IDemo
     {
         private HttpClient _httpClient;
-        private static readonly Logger _logger = new Logger();
         private readonly RetryPolicy<HttpResponseMessage> _httpRetryPolicy;
 
         public PolicyDelegatesDemo()
@@ -42,7 +40,7 @@ namespace PollyDemo.App.Demos
 
             _httpClient = GetHttpClient("BadAuthCode");
 
-            _logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.AuthRequest);
+            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.AuthRequest);
 
             var response = await _httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.AuthRequest));
             var content = null as object;
@@ -51,8 +49,7 @@ namespace PollyDemo.App.Demos
                 content = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
             else if (response.Content != null)
                 content = await response.Content.ReadAsStringAsync();
-
-            _logger.LogResponse(ActionType.Received, response.StatusCode, content);
+            Logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }
 
         private HttpClient GetHttpClient(string authCookieValue)

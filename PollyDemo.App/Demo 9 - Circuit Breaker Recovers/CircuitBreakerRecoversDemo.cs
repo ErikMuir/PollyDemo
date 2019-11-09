@@ -1,5 +1,4 @@
-﻿using MuirDev.ConsoleTools.Logger;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Wrap;
@@ -14,7 +13,6 @@ namespace PollyDemo.App.Demos
     public class CircuitBreakerRecoversDemo : IDemo
     {
         private HttpClient _httpClient;
-        private static readonly Logger _logger = new Logger();
         private readonly PolicyWrap<HttpResponseMessage> _policy;
 
         public CircuitBreakerRecoversDemo()
@@ -49,7 +47,7 @@ namespace PollyDemo.App.Demos
             {
                 do
                 {
-                    _logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularRequest);
+                    Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularRequest);
 
                     response = await _policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularRequest));
                     var content = null as object;
@@ -58,14 +56,13 @@ namespace PollyDemo.App.Demos
                         content = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
                     else if (response.Content != null)
                         content = await response.Content.ReadAsStringAsync();
-
-                    _logger.LogResponse(ActionType.Received, response.StatusCode, content);
+                    Logger.LogResponse(ActionType.Received, response.StatusCode, content);
                 }
                 while (!response.IsSuccessStatusCode);
             }
             catch (BrokenCircuitException e)
             {
-                _logger.LogException(e);
+                Logger.LogException(e);
             }
         }
 

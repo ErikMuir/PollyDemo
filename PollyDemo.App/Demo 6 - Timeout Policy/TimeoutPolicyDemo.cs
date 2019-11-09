@@ -1,5 +1,4 @@
-﻿using MuirDev.ConsoleTools.Logger;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Polly;
 using Polly.Timeout;
 using PollyDemo.Common;
@@ -14,7 +13,6 @@ namespace PollyDemo.App.Demos
     public class TimeoutPolicyDemo : IDemo
     {
         private HttpClient _httpClient;
-        private static readonly Logger _logger = new Logger();
         private readonly TimeoutPolicy _timeoutPolicy;
 
         public TimeoutPolicyDemo()
@@ -28,7 +26,7 @@ namespace PollyDemo.App.Demos
 
             _httpClient = GetHttpClient();
 
-            _logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowRequest);
+            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowRequest);
 
             try
             {
@@ -41,12 +39,11 @@ namespace PollyDemo.App.Demos
                     content = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
                 else if (response.Content != null)
                     content = await response.Content.ReadAsStringAsync();
-
-                _logger.LogResponse(ActionType.Received, response.StatusCode, content);
+                Logger.LogResponse(ActionType.Received, response.StatusCode, content);
             }
             catch (TimeoutRejectedException e)
             {
-                _logger.LogException(e);
+                Logger.LogException(e);
             }
         }
 

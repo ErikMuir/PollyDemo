@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MuirDev.ConsoleTools.Logger;
 using PollyDemo.Common;
 using System;
 using System.Net;
@@ -12,20 +11,19 @@ namespace PollyDemo.Api
     [Route("api/[controller]")]
     public class CreditsController : Controller
     {
-        private static readonly Logger _logger = new Logger();
         private static int _requestCount = 0;
 
         [HttpGet("fail/{userId}")]
         public async Task<IActionResult> Fail(int userId)
         {
-            _logger.LogRequest(ActionType.Received, HttpMethod.Get, $"fail/{userId}");
+            Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"fail/{userId}");
 
             await Task.Delay(100); // simulate some data processing
 
             var statusCode = HttpStatusCode.InternalServerError;
             var content = "Something went wrong";
 
-            _logger.LogResponse(ActionType.Sending, statusCode, content);
+            Logger.LogResponse(ActionType.Sending, statusCode, content);
 
             return StatusCode((int)statusCode, content);
         }
@@ -33,7 +31,7 @@ namespace PollyDemo.Api
         [HttpGet("irregular/{userId}")]
         public async Task<IActionResult> Irregular(int userId)
         {
-            _logger.LogRequest(ActionType.Received, HttpMethod.Get, $"irregular/{userId}");
+            Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"irregular/{userId}");
 
             await Task.Delay(100); // simulate some data processing
 
@@ -43,7 +41,7 @@ namespace PollyDemo.Api
             var statusCode = isFourthRequest ? HttpStatusCode.OK : HttpStatusCode.InternalServerError;
             var content = isFourthRequest ? 15 as object : "Something went wrong";
 
-            _logger.LogResponse(ActionType.Sending, statusCode, content);
+            Logger.LogResponse(ActionType.Sending, statusCode, content);
 
             return StatusCode((int)statusCode, content);
         }
@@ -51,7 +49,7 @@ namespace PollyDemo.Api
         [HttpGet("auth/{userId}")]
         public async Task<IActionResult> Auth(int userId)
         {
-            _logger.LogRequest(ActionType.Received, HttpMethod.Get, $"auth/{userId}");
+            Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"auth/{userId}");
 
             await Task.Delay(100); // simulate some data processing
 
@@ -59,7 +57,7 @@ namespace PollyDemo.Api
             var statusCode = isAuthenticated ? HttpStatusCode.OK : HttpStatusCode.Unauthorized;
             var content = isAuthenticated ? 15 as object : "You are not authorized";
 
-            _logger.LogResponse(ActionType.Sending, statusCode, content);
+            Logger.LogResponse(ActionType.Sending, statusCode, content);
 
             return StatusCode((int)statusCode, content);
         }
@@ -67,14 +65,14 @@ namespace PollyDemo.Api
         [HttpGet("slow/{userId}")]
         public async Task<IActionResult> Slow(int userId)
         {
-            _logger.LogRequest(ActionType.Received, HttpMethod.Get, $"slow/{userId}");
+            Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"slow/{userId}");
 
             await Task.Delay(10000); // simulate some heavy data processing by delaying for 10 seconds
 
             var statusCode = HttpStatusCode.InternalServerError;
             var content = "Something went wrong";
 
-            _logger.LogResponse(ActionType.Sending, statusCode, content);
+            Logger.LogResponse(ActionType.Sending, statusCode, content);
 
             return StatusCode((int)statusCode, content);
         }

@@ -1,5 +1,4 @@
-﻿using MuirDev.ConsoleTools.Logger;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PollyDemo.Common;
 using System;
 using System.Net.Http;
@@ -11,7 +10,6 @@ namespace PollyDemo.App.Demos
     public class BeforePollyDemo : IDemo
     {
         private HttpClient _httpClient;
-        private static readonly Logger _logger = new Logger();
 
         public async Task Run()
         {
@@ -19,7 +17,7 @@ namespace PollyDemo.App.Demos
 
             _httpClient = GetHttpClient();
 
-            _logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailRequest);
+            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailRequest);
 
             var response = await _httpClient.GetAsync(Constants.FailRequest);
             var content = null as object;
@@ -28,8 +26,7 @@ namespace PollyDemo.App.Demos
                 content = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
             else if (response.Content != null)
                 content = await response.Content.ReadAsStringAsync();
-
-            _logger.LogResponse(ActionType.Received, response.StatusCode, content);
+            Logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }
 
         private HttpClient GetHttpClient()
