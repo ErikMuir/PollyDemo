@@ -33,12 +33,8 @@ namespace PollyDemo.App.Demos
                 var response = await _timeoutPolicy.ExecuteAsync(async token =>
                     await _httpClient.GetAsync(Constants.SlowRequest, token),
                     CancellationToken.None);
-                var content = null as object;
+                var content = await response.Content?.ReadAsStringAsync();
 
-                if (response.IsSuccessStatusCode)
-                    content = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
-                else if (response.Content != null)
-                    content = await response.Content.ReadAsStringAsync();
                 Logger.LogResponse(ActionType.Received, response.StatusCode, content);
             }
             catch (TimeoutRejectedException e)

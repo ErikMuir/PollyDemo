@@ -43,12 +43,8 @@ namespace PollyDemo.App.Demos
             Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.AuthRequest);
 
             var response = await _httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.AuthRequest));
-            var content = null as object;
+            var content = await response.Content?.ReadAsStringAsync();
 
-            if (response.IsSuccessStatusCode)
-                content = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
-            else if (response.Content != null)
-                content = await response.Content.ReadAsStringAsync();
             Logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }
 

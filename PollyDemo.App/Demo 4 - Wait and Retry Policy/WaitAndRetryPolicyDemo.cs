@@ -19,12 +19,12 @@ namespace PollyDemo.App.Demos
             _httpRetryPolicy =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                     .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
-                    //.WaitAndRetryAsync(new[]
-                    //{
-                    //    TimeSpan.FromSeconds(1),
-                    //    TimeSpan.FromSeconds(2),
-                    //    TimeSpan.FromSeconds(3),
-                    //});
+            //.WaitAndRetryAsync(new[]
+            //{
+            //    TimeSpan.FromSeconds(1),
+            //    TimeSpan.FromSeconds(2),
+            //    TimeSpan.FromSeconds(3),
+            //});
 
         }
 
@@ -37,12 +37,8 @@ namespace PollyDemo.App.Demos
             Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularRequest);
 
             var response = await _httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularRequest));
-            var content = null as object;
+            var content = await response.Content?.ReadAsStringAsync();
 
-            if (response.IsSuccessStatusCode)
-                content = JsonConvert.DeserializeObject<int>(await response.Content.ReadAsStringAsync());
-            else if (response.Content != null)
-                content = await response.Content.ReadAsStringAsync();
             Logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }
 
