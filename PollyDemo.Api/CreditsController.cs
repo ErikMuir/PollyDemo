@@ -11,70 +11,54 @@ namespace PollyDemo.Api
     [Route("api/[controller]")]
     public class CreditsController : Controller
     {
-        private static int _requestCount = 0;
+        private static int _irregularRequestCount = 0;
 
         [HttpGet("fail/{userId}")]
-        public async Task<IActionResult> Fail(int userId)
+        public async Task<IActionResult> Fail(string userId)
         {
             Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"fail/{userId}");
 
             await Task.Delay(100); // simulate some data processing
 
-            var statusCode = HttpStatusCode.InternalServerError;
-            var content = "Something went wrong";
-
-            Logger.LogResponse(ActionType.Sending, statusCode, content);
-
-            return StatusCode((int)statusCode, content);
+            return ErrorResponse();
         }
 
         [HttpGet("irregular/{userId}")]
-        public async Task<IActionResult> Irregular(int userId)
+        public async Task<IActionResult> Irregular(string userId)
         {
             Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"irregular/{userId}");
 
             await Task.Delay(100); // simulate some data processing
 
-            _requestCount++;
+            var isFourthRequest = ++_irregularRequestCount % 4 == 0;
 
-            var isFourthRequest = _requestCount % 4 == 0;
-            var statusCode = isFourthRequest ? HttpStatusCode.OK : HttpStatusCode.InternalServerError;
-            var content = isFourthRequest ? 15 as object : "Something went wrong";
-
-            Logger.LogResponse(ActionType.Sending, statusCode, content);
-
-            return StatusCode((int)statusCode, content);
+            return isFourthRequest
+                ? OkResponse()
+                : ErrorResponse();
         }
 
         [HttpGet("auth/{userId}")]
-        public async Task<IActionResult> Auth(int userId)
+        public async Task<IActionResult> Auth(string userId)
         {
             Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"auth/{userId}");
 
             await Task.Delay(100); // simulate some data processing
 
-            var isAuthenticated = Request.Cookies["Auth"] == "GoodAuthCode";
-            var statusCode = isAuthenticated ? HttpStatusCode.OK : HttpStatusCode.Unauthorized;
-            var content = isAuthenticated ? 15 as object : "You are not authorized";
+            var isAuthenticated = Request.Cookies["auth"] == "GoodAuthCode";
 
-            Logger.LogResponse(ActionType.Sending, statusCode, content);
-
-            return StatusCode((int)statusCode, content);
+            return isAuthenticated
+                ? OkResponse()
+                : UnauthorizedResponse();
         }
 
         [HttpGet("slow/{userId}")]
-        public async Task<IActionResult> Slow(int userId)
+        public async Task<IActionResult> Slow(string userId)
         {
             Logger.LogRequest(ActionType.Received, HttpMethod.Get, $"slow/{userId}");
 
             await Task.Delay(10000); // simulate some heavy data processing by delaying for 10 seconds
 
-            var statusCode = HttpStatusCode.InternalServerError;
-            var content = "Something went wrong";
-
-            Logger.LogResponse(ActionType.Sending, statusCode, content);
-
-            return StatusCode((int)statusCode, content);
+            return TimeoutResponse();
         }
 
         #region -- Demo Orchestration --
@@ -93,6 +77,20 @@ namespace PollyDemo.Api
             Environment.Exit(0);
             return Ok();
         }
+
+        private IActionResult SendResponse(HttpStatusCode statusCode, object content)
+        {
+            Logger.LogResponse(ActionType.Sending, statusCode, content);
+            return StatusCode((int)statusCode, content);
+        }
+
+        private IActionResult OkResponse() => SendResponse(HttpStatusCode.OK, 15);
+
+        private IActionResult ErrorResponse() => SendResponse(HttpStatusCode.InternalServerError, "Something went horribly wrong!");
+
+        private IActionResult TimeoutResponse() => SendResponse(HttpStatusCode.RequestTimeout, "The request timed out.");
+
+        private IActionResult UnauthorizedResponse() => SendResponse(HttpStatusCode.Unauthorized, "You are not authenticated.");
 
         #endregion
     }
