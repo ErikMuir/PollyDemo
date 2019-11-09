@@ -9,16 +9,16 @@ namespace PollyDemo.App
 {
     public class App
     {
-        private HttpClient _httpClient;
-        private readonly BeforePollyDemo _beforePolicyDemo = new BeforePollyDemo();
-        private readonly FallbackPolicyDemo _fallbackPolicyDemo = new FallbackPolicyDemo();
-        private readonly RetryPolicyDemo _retryPolicyDemo = new RetryPolicyDemo();
-        private readonly WaitAndRetryPolicyDemo _waitAndRetryPolicyDemo = new WaitAndRetryPolicyDemo();
-        private readonly PolicyDelegatesDemo _policyDelegatesDemo = new PolicyDelegatesDemo();
-        private readonly TimeoutPolicyDemo _timeoutPolicyDemo = new TimeoutPolicyDemo();
-        private readonly PolicyWrappingDemo _policyWrappingDemo = new PolicyWrappingDemo();
-        private readonly CircuitBreakerFailsDemo _circuitBreakerFailsDemo = new CircuitBreakerFailsDemo();
-        private readonly CircuitBreakerRecoversDemo _circuitBreakerRecoversDemo = new CircuitBreakerRecoversDemo();
+        private readonly HttpClient _httpClient;
+        private readonly IDemo _beforePolicyDemo = new BeforePollyDemo();
+        private readonly IDemo _fallbackPolicyDemo = new FallbackPolicyDemo();
+        private readonly IDemo _retryPolicyDemo = new RetryPolicyDemo();
+        private readonly IDemo _waitAndRetryPolicyDemo = new WaitAndRetryPolicyDemo();
+        private readonly IDemo _policyDelegatesDemo = new PolicyDelegatesDemo();
+        private readonly IDemo _timeoutPolicyDemo = new TimeoutPolicyDemo();
+        private readonly IDemo _policyWrappingDemo = new PolicyWrappingDemo();
+        private readonly IDemo _circuitBreakerFailsDemo = new CircuitBreakerFailsDemo();
+        private readonly IDemo _circuitBreakerRecoversDemo = new CircuitBreakerRecoversDemo();
 
         public App()
         {
