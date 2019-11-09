@@ -17,10 +17,10 @@ namespace PollyDemo.App.Demos
     public class PolicyWrappingDemo : IDemo
     {
         private HttpClient _httpClient;
-        private readonly PolicyWrap<HttpResponseMessage> _policy;
-        private readonly TimeoutPolicy _timeoutPolicy;
-        private readonly RetryPolicy<HttpResponseMessage> _retryPolicy;
-        private readonly FallbackPolicy<HttpResponseMessage> _fallbackPolicy;
+        private readonly AsyncPolicyWrap<HttpResponseMessage> _policy;
+        private readonly AsyncTimeoutPolicy _timeoutPolicy;
+        private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy;
+        private readonly AsyncFallbackPolicy<HttpResponseMessage> _fallbackPolicy;
         private readonly int _fallbackResult = 0;
 
         public PolicyWrappingDemo()

@@ -12,7 +12,7 @@ namespace PollyDemo.App.Demos
     public class PolicyDelegatesDemo : IDemo
     {
         private HttpClient _httpClient;
-        private readonly RetryPolicy<HttpResponseMessage> _httpRetryPolicy;
+        private readonly AsyncRetryPolicy<HttpResponseMessage> _httpRetryPolicy;
 
         public PolicyDelegatesDemo()
         {

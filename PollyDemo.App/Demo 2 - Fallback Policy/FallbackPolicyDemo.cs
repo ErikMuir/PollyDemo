@@ -14,7 +14,7 @@ namespace PollyDemo.App.Demos
     public class FallbackPolicyDemo : IDemo
     {
         private HttpClient _httpClient;
-        private readonly FallbackPolicy<HttpResponseMessage> _fallbackPolicy;
+        private readonly AsyncFallbackPolicy<HttpResponseMessage> _fallbackPolicy;
         private readonly int _fallbackResult = 0;
 
         public FallbackPolicyDemo()

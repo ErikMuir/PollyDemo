@@ -12,7 +12,7 @@ namespace PollyDemo.App.Demos
     public class CircuitBreakerFailsDemo : IDemo
     {
         private HttpClient _httpClient;
-        private readonly PolicyWrap<HttpResponseMessage> _policy;
+        private readonly AsyncPolicyWrap<HttpResponseMessage> _policy;
 
         public CircuitBreakerFailsDemo()
         {

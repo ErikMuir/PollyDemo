@@ -12,7 +12,7 @@ namespace PollyDemo.App.Demos
     public class TimeoutPolicyDemo : IDemo
     {
         private HttpClient _httpClient;
-        private readonly TimeoutPolicy _timeoutPolicy;
+        private readonly AsyncTimeoutPolicy _timeoutPolicy;
 
         public TimeoutPolicyDemo()
         {
