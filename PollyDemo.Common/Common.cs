@@ -1,4 +1,4 @@
-﻿using MuirDev.ConsoleTools;
+using MuirDev.ConsoleTools;
 using System;
 using System.ComponentModel;
 using System.Net;
