@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using Polly;
 using Polly.Fallback;
 using Polly.Retry;
