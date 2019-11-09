@@ -1,4 +1,4 @@
-﻿using PollyDemo.App.Demos;
+using PollyDemo.App.Demos;
 using PollyDemo.Common;
 using System;
 using System.Collections.Generic;

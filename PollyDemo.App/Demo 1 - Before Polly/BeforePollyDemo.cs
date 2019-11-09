@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using PollyDemo.Common;
 using System;
 using System.Net.Http;

@@ -1,4 +1,4 @@
-﻿namespace PollyDemo.App
+namespace PollyDemo.App
 {
     public class Program
     {
