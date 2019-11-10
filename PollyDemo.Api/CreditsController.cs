@@ -44,7 +44,7 @@ namespace PollyDemo.Api
 
             await Task.Delay(100); // simulate some data processing
 
-            var isAuthenticated = Request.Cookies["auth"] == "GoodAuthCode";
+            var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
 
             return isAuthenticated
                 ? OkResponse()

@@ -12,52 +12,38 @@ namespace PollyDemo.App.Demos
     public class PolicyDelegatesDemo : IDemo
     {
         private HttpClient _httpClient;
-        private readonly AsyncRetryPolicy<HttpResponseMessage> _httpRetryPolicy;
 
-        public PolicyDelegatesDemo()
+        public PolicyDelegatesDemo(HttpClient client)
         {
-            _httpRetryPolicy =
-                Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                    .RetryAsync(3, onRetry: (httpResponseMessage, i) =>
-                    {
-                        if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Unauthorized)
-                        {
-                            PerformReauthorization();
-                        }
-                    });
-        }
-
-        private void PerformReauthorization()
-        {
-            Console.WriteLine("Reauthenticating ...");
-            _httpClient = GetHttpClient("GoodAuthCode");
+            _httpClient = client;
         }
 
         public async Task Run()
         {
             Console.WriteLine("Demo 5 - Policy Delegates");
 
-            _httpClient = GetHttpClient("BadAuthCode");
+            var expiredToken = new AuthenticationHeaderValue("Bearer", "expired-token");
+            var freshToken = new AuthenticationHeaderValue("Bearer", "fresh-token");
+
+            _httpClient.DefaultRequestHeaders.Authorization = expiredToken;
 
             Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.AuthRequest);
 
-            var response = await _httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.AuthRequest));
+            var httpRetryPolicy =
+                Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+                    .RetryAsync(3, onRetry: (httpResponseMessage, i) =>
+                    {
+                        if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Unauthorized)
+                        {
+                            Console.WriteLine("Refreshing auth token ...");
+                            _httpClient.DefaultRequestHeaders.Authorization = freshToken;
+                        }
+                    });
+
+            var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.AuthRequest));
             var content = await response.Content?.ReadAsStringAsync();
 
             Logger.LogResponse(ActionType.Received, response.StatusCode, content);
-        }
-
-        private HttpClient GetHttpClient(string authCookieValue)
-        {
-            var cookieContainer = new CookieContainer();
-            var handler = new HttpClientHandler() { CookieContainer = cookieContainer };
-            cookieContainer.Add(new Uri("http://localhost"), new Cookie("Auth", authCookieValue));
-
-            var httpClient = new HttpClient(handler);
-            httpClient.BaseAddress = new Uri(Constants.BaseAddress);
-            httpClient.DefaultRequestHeaders.Accept.Clear();
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            return httpClient;
         }
     }
 }

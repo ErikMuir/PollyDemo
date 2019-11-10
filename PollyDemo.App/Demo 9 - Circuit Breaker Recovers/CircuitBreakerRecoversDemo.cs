@@ -12,10 +12,16 @@ namespace PollyDemo.App.Demos
     public class CircuitBreakerRecoversDemo : IDemo
     {
         private HttpClient _httpClient;
-        private readonly AsyncPolicyWrap<HttpResponseMessage> _policy;
 
-        public CircuitBreakerRecoversDemo()
+        public CircuitBreakerRecoversDemo(HttpClient client)
         {
+            _httpClient = client;
+        }
+
+        public async Task Run()
+        {
+            Console.WriteLine("Demo 9 - Circuit Breaker Policy (recovers)");
+
             var retry = Policy
                 .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                 .RetryAsync(4);
@@ -31,14 +37,7 @@ namespace PollyDemo.App.Demos
                     },
                     onReset: () => { });
 
-            _policy = Policy.WrapAsync(retry, breaker);
-        }
-
-        public async Task Run()
-        {
-            Console.WriteLine("Demo 9 - Circuit Breaker Policy (recovers)");
-
-            _httpClient = GetHttpClient();
+            var policy = Policy.WrapAsync(retry, breaker);
 
             HttpResponseMessage response;
 
@@ -48,7 +47,7 @@ namespace PollyDemo.App.Demos
                 {
                     Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularRequest);
 
-                    response = await _policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularRequest));
+                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularRequest));
                     var content = await response.Content?.ReadAsStringAsync();
 
                     Logger.LogResponse(ActionType.Received, response.StatusCode, content);
@@ -59,15 +58,6 @@ namespace PollyDemo.App.Demos
             {
                 Logger.LogException(e);
             }
-        }
-
-        private HttpClient GetHttpClient()
-        {
-            var httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri(Constants.BaseAddress);
-            httpClient.DefaultRequestHeaders.Accept.Clear();
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            return httpClient;
         }
     }
 }
