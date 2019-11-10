@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Polly;
 using Polly.Timeout;
 using PollyDemo.Common;
@@ -22,7 +23,7 @@ namespace PollyDemo.App.Demos
         {
             Console.WriteLine("Demo 7 - Policy Wrapping");
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowRequest);
+            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowEndpoint);
 
             var timeoutPolicy = Policy.TimeoutAsync(2);
 
@@ -31,12 +32,15 @@ namespace PollyDemo.App.Demos
                 .Or<TimeoutRejectedException>()
                 .RetryAsync(3);
 
+            var fallbackValue = "Unknown";
+            var serializedFallbackValue = JsonConvert.SerializeObject(fallbackValue);
+
             var fallbackPolicy = Policy
                 .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                 .Or<TimeoutRejectedException>()
                 .FallbackAsync(new HttpResponseMessage(HttpStatusCode.OK)
                 {
-                    Content = new StringContent("0"),
+                    Content = new StringContent(serializedFallbackValue),
                 });
 
             // var response = 
@@ -50,9 +54,9 @@ namespace PollyDemo.App.Demos
             var wrappedPolicy = Policy.WrapAsync(fallbackPolicy, retryPolicy).WrapAsync(timeoutPolicy);
 
             var response = await wrappedPolicy.ExecuteAsync(async token =>
-                await _httpClient.GetAsync(Constants.SlowRequest, token),
+                await _httpClient.GetAsync(Constants.SlowEndpoint, token),
                 CancellationToken.None);
-            var content = await response.Content?.ReadAsStringAsync();
+            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
             Logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }

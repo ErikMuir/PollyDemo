@@ -117,12 +117,12 @@ namespace PollyDemo.App
 
         private async Task Clear()
         {
-            await _httpClient.GetAsync("clear");
+            await _httpClient.GetAsync("/clear");
         }
 
         private void Shutdown()
         {
-            _httpClient.GetAsync("shutdown");
+            _httpClient.GetAsync("/shutdown");
         }
     }
 }

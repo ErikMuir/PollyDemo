@@ -1,10 +1,9 @@
+using Newtonsoft.Json;
 using Polly;
 using Polly.CircuitBreaker;
-using Polly.Wrap;
 using PollyDemo.Common;
 using System;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace PollyDemo.App.Demos
@@ -46,10 +45,10 @@ namespace PollyDemo.App.Demos
             {
                 do
                 {
-                    Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailRequest);
+                    Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailEndpoint);
 
-                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.FailRequest));
-                    var content = await response.Content?.ReadAsStringAsync();
+                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.FailEndpoint));
+                    var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
                     Logger.LogResponse(ActionType.Received, response.StatusCode, content);
                 }

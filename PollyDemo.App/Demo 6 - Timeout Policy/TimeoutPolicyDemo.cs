@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Polly;
 using Polly.Timeout;
 using PollyDemo.Common;
@@ -21,16 +22,16 @@ namespace PollyDemo.App.Demos
         {
             Console.WriteLine("Demo 6 - Timeout Policy");
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowRequest);
+            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowEndpoint);
 
             var timeoutPolicy = Policy.TimeoutAsync(5, TimeoutStrategy.Optimistic);
 
             try
             {
                 var response = await timeoutPolicy.ExecuteAsync(async token =>
-                    await _httpClient.GetAsync(Constants.SlowRequest, token),
+                    await _httpClient.GetAsync(Constants.SlowEndpoint, token),
                     CancellationToken.None);
-                var content = await response.Content?.ReadAsStringAsync();
+                var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
                 Logger.LogResponse(ActionType.Received, response.StatusCode, content);
             }

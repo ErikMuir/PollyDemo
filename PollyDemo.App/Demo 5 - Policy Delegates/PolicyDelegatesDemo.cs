@@ -1,5 +1,5 @@
+using Newtonsoft.Json;
 using Polly;
-using Polly.Retry;
 using PollyDemo.Common;
 using System;
 using System.Net;
@@ -27,7 +27,7 @@ namespace PollyDemo.App.Demos
 
             _httpClient.DefaultRequestHeaders.Authorization = expiredToken;
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.AuthRequest);
+            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.AuthEndpoint);
 
             var httpRetryPolicy =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -40,8 +40,8 @@ namespace PollyDemo.App.Demos
                         }
                     });
 
-            var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.AuthRequest));
-            var content = await response.Content?.ReadAsStringAsync();
+            var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.AuthEndpoint));
+            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
             Logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }

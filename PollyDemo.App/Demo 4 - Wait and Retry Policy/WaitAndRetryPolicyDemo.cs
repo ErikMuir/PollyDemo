@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Polly;
 using PollyDemo.Common;
 using System;
@@ -19,7 +20,7 @@ namespace PollyDemo.App.Demos
         {
             Console.WriteLine("Demo 4 - Wait and Retry Policy");
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularRequest);
+            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularEndpoint);
 
             var httpRetryPolicy =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -31,8 +32,8 @@ namespace PollyDemo.App.Demos
             //    TimeSpan.FromSeconds(3),
             //});
 
-            var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularRequest));
-            var content = await response.Content?.ReadAsStringAsync();
+            var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularEndpoint));
+            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
             Logger.LogResponse(ActionType.Received, response.StatusCode, content);
         }

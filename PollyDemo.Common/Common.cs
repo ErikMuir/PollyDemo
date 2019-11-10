@@ -9,11 +9,11 @@ namespace PollyDemo.Common
 {
     public static class Constants
     {
-        public const string BaseAddress = "http://localhost:5000/api/credits/";
-        public const string FailRequest = "fail/1234";
-        public const string IrregularRequest = "irregular/1234";
-        public const string AuthRequest = "auth/1234";
-        public const string SlowRequest = "slow/1234";
+        public const string BaseAddress = "http://localhost:5000/api/WeatherForecast";
+        public const string FailEndpoint = "/fail";
+        public const string IrregularEndpoint = "/irregular";
+        public const string AuthEndpoint = "/auth";
+        public const string SlowEndpoint = "/slow";
     }
 
     public enum ActionType
@@ -46,7 +46,7 @@ namespace PollyDemo.Common
             ConsoleTools.LineFeed();
         }
 
-        public static void LogResponse(ActionType actionType, HttpStatusCode statusCode, object content)
+        public static void LogResponse(ActionType actionType, HttpStatusCode statusCode, string content)
         {
             ConsoleTools.Info($"{actionType} response: ", _noEOL);
             var isSuccessStatusCode = (int)statusCode >= 200 && (int)statusCode < 300;
@@ -58,7 +58,7 @@ namespace PollyDemo.Common
                 IsEndOfLine = false,
             };
             ConsoleTools.Info($"{(int)statusCode} {statusCode}", logOptions);
-            if (content != null) ConsoleTools.Info($": {content}", logOptions);
+            if (!string.IsNullOrWhiteSpace(content)) ConsoleTools.Info($" : {content}", logOptions);
             ConsoleTools.LineFeed();
         }
 
