@@ -47,9 +47,9 @@ namespace PollyDemo.App.Demos
             //                await _httpClient.GetAsync(Constants.SlowRequest, token),
             //                CancellationToken.None)));
 
-            var policy = Policy.WrapAsync(fallbackPolicy, retryPolicy).WrapAsync(timeoutPolicy);
+            var wrappedPolicy = Policy.WrapAsync(fallbackPolicy, retryPolicy).WrapAsync(timeoutPolicy);
 
-            var response = await policy.ExecuteAsync(async token =>
+            var response = await wrappedPolicy.ExecuteAsync(async token =>
                 await _httpClient.GetAsync(Constants.SlowRequest, token),
                 CancellationToken.None);
             var content = await response.Content?.ReadAsStringAsync();
