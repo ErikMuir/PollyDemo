@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PollyDemo.Common;
@@ -28,7 +27,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/fail")]
         public async Task<IActionResult> Fail()
         {
-            DemoLogger.LogRequest(ActionType.Receive, HttpMethod.Get, Constants.FailEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, Constants.FailEndpoint);
             await Task.Delay(_simulateDataProcessing);
             return ErrorResponse();
         }
@@ -36,7 +35,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/irregular")]
         public async Task<IActionResult> Irregular()
         {
-            DemoLogger.LogRequest(ActionType.Receive, HttpMethod.Get, Constants.IrregularEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, Constants.IrregularEndpoint);
             await Task.Delay(_simulateDataProcessing);
             var isFourthRequest = ++_irregularRequestCount % 4 == 0;
             return isFourthRequest ? OkResponse() : ErrorResponse();
@@ -45,7 +44,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/auth")]
         public async Task<IActionResult> Auth()
         {
-            DemoLogger.LogRequest(ActionType.Receive, HttpMethod.Get, Constants.AuthEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, Constants.AuthEndpoint);
             await Task.Delay(_simulateDataProcessing);
             var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
             return isAuthenticated ? OkResponse() : UnauthorizedResponse();
@@ -54,7 +53,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/slow")]
         public async Task<IActionResult> Slow()
         {
-            DemoLogger.LogRequest(ActionType.Receive, HttpMethod.Get, Constants.SlowEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, Constants.SlowEndpoint);
             await Task.Delay(_simulateHangingService);
             return TimeoutResponse();
         }
