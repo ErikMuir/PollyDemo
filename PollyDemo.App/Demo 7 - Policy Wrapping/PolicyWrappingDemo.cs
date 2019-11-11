@@ -1,12 +1,12 @@
-using Newtonsoft.Json;
-using Polly;
-using Polly.Timeout;
-using PollyDemo.Common;
 using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Polly;
+using Polly.Timeout;
+using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {

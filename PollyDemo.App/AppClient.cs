@@ -1,10 +1,10 @@
-using PollyDemo.App.Demos;
-using PollyDemo.Common;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using MuirDev.ConsoleTools;
+using PollyDemo.App.Demos;
+using PollyDemo.Common;
 
 namespace PollyDemo.App
 {

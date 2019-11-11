@@ -1,9 +1,9 @@
-using MuirDev.ConsoleTools;
 using System;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using MuirDev.ConsoleTools;
 
 namespace PollyDemo.Common
 {
