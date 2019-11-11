@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using MuirDev.ConsoleTools;
 
 namespace PollyDemo.App
 {
@@ -35,84 +36,78 @@ namespace PollyDemo.App
             _circuitBreakerRecoversDemo = new CircuitBreakerRecoversDemo(_httpClient);
         }
 
+        private static readonly IDictionary<char, string> _menuOptions = new Dictionary<char, string>
+        {
+            { '1', "Without Polly" },
+            { '2', "Fallback Policy" },
+            { '3', "Retry Policy" },
+            { '4', "Wait and Retry Policy" },
+            { '5', "Policy Delegates" },
+            { '6', "Timeout Policy" },
+            { '7', "Policy Wrapping" },
+            { '8', "Circuit Breaker Policy (fails)" },
+            { '9', "Circuit Breaker Policy (recovers)" },
+            { 'q', "quit" },
+        };
+
+        private static readonly Menu _menu = new Menu(_menuOptions, "Demos");
+
         public async Task Run()
         {
             while (true)
             {
                 await Clear();
-                switch (GetResponse())
+                Console.Clear();
+                var response = _menu.Run();
+                if (response == 'q')
                 {
-                    case "1":
-                        await _beforePolicyDemo.Run();
-                        break;
-                    case "2":
-                        await _fallbackPolicyDemo.Run();
-                        break;
-                    case "3":
-                        await _retryPolicyDemo.Run();
-                        break;
-                    case "4":
-                        await _waitAndRetryPolicyDemo.Run();
-                        break;
-                    case "5":
-                        await _policyDelegatesDemo.Run();
-                        break;
-                    case "6":
-                        await _timeoutPolicyDemo.Run();
-                        break;
-                    case "7":
-                        await _policyWrappingDemo.Run();
-                        break;
-                    case "8":
-                        await _circuitBreakerFailsDemo.Run();
-                        break;
-                    case "9":
-                        await _circuitBreakerRecoversDemo.Run();
-                        break;
-                    case "q":
-                        Shutdown();
-                        Environment.Exit(0);
-                        break;
+                    Shutdown();
+                    Environment.Exit(0);
                 }
+                await RunDemo(response);
                 Continue();
             }
         }
 
-        private void ShowMenu()
+        private async Task RunDemo(char menuOption)
         {
-            Console.Clear();
-            Console.WriteLine("********** Demos **********");
-            Console.WriteLine(" 1 - Without Polly");
-            Console.WriteLine(" 2 - Fallback Policy");
-            Console.WriteLine(" 3 - Retry Policy");
-            Console.WriteLine(" 4 - Wait and Retry Policy");
-            Console.WriteLine(" 5 - Policy Delegates");
-            Console.WriteLine(" 6 - Timeout Policy");
-            Console.WriteLine(" 7 - Policy Wrapping (Fallback, Retry, Timeout)");
-            Console.WriteLine(" 8 - Circuit Breaker Policy (fails)");
-            Console.WriteLine(" 9 - Circuit Breaker Policy (recovers)");
-            Console.WriteLine();
-        }
-
-        private string GetResponse()
-        {
-            var allowedResponses = new List<string> { "1", "2", "3", "4", "5", "6", "7", "8", "9", "q" };
-            var response = string.Empty;
-            ShowMenu();
-            while (!allowedResponses.Contains(response))
+            switch (menuOption)
             {
-                Console.Write("Choose a demo (or 'q' to quit): ");
-                response = Console.ReadLine().Trim().ToLower();
+                case '1':
+                    await _beforePolicyDemo.Run();
+                    break;
+                case '2':
+                    await _fallbackPolicyDemo.Run();
+                    break;
+                case '3':
+                    await _retryPolicyDemo.Run();
+                    break;
+                case '4':
+                    await _waitAndRetryPolicyDemo.Run();
+                    break;
+                case '5':
+                    await _policyDelegatesDemo.Run();
+                    break;
+                case '6':
+                    await _timeoutPolicyDemo.Run();
+                    break;
+                case '7':
+                    await _policyWrappingDemo.Run();
+                    break;
+                case '8':
+                    await _circuitBreakerFailsDemo.Run();
+                    break;
+                case '9':
+                    await _circuitBreakerRecoversDemo.Run();
+                    break;
             }
-            Console.WriteLine();
-            return response;
         }
 
         private void Continue()
         {
             Console.WriteLine();
-            Console.Write("Press Enter to continue... ");
-            while (Console.ReadKey(true).Key != ConsoleKey.Enter) { }
+            Console.Write("Press any key to continue... ");
+            Console.ReadKey(true);
         }
 
         private async Task Clear()
