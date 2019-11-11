@@ -27,7 +27,7 @@ namespace PollyDemo.Common
         Task Run();
     }
 
-    public static class Logger
+    public static class DemoLogger
     {
         private static readonly LogOptions _noEOL = new LogOptions
         {

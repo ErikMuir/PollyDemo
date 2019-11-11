@@ -25,7 +25,7 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 7 - Policy Wrapping");
             Console.ReadKey(true);
 
-            Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.SlowEndpoint);
+            DemoLogger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.SlowEndpoint);
 
             var timeoutPolicy = Policy.TimeoutAsync(2);
 
@@ -60,7 +60,7 @@ namespace PollyDemo.App.Demos
                 CancellationToken.None);
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-            Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
+            DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);
         }
     }
 }

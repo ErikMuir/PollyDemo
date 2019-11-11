@@ -21,13 +21,13 @@ namespace PollyDemo.App
 
             var endpoint = "/fail";
 
-            Logger.LogRequest(ActionType.Send, endpoint);
+            DemoLogger.LogRequest(ActionType.Send, endpoint);
 
             var response = await _httpClient.GetAsync(endpoint);
 
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-            Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
+            DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);
         }
 
         private async Task Clear()

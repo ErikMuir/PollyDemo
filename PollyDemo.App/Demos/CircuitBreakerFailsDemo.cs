@@ -47,18 +47,18 @@ namespace PollyDemo.App.Demos
             {
                 do
                 {
-                    Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.FailEndpoint);
+                    DemoLogger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.FailEndpoint);
 
                     response = await policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.FailEndpoint));
                     var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-                    Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
+                    DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);
                 }
                 while (!response.IsSuccessStatusCode);
             }
             catch (BrokenCircuitException e)
             {
-                Logger.LogException(e);
+                DemoLogger.LogException(e);
             }
         }
     }

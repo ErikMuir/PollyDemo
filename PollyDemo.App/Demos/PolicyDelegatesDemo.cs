@@ -29,7 +29,7 @@ namespace PollyDemo.App.Demos
 
             _httpClient.DefaultRequestHeaders.Authorization = expiredToken;
 
-            Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.AuthEndpoint);
+            DemoLogger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.AuthEndpoint);
 
             var httpRetryPolicy =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -45,7 +45,7 @@ namespace PollyDemo.App.Demos
             var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.AuthEndpoint));
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-            Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
+            DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);
         }
     }
 }
