@@ -22,7 +22,7 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 4 - Wait and Retry Policy");
             Console.ReadKey(true);
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularEndpoint);
+            Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.IrregularEndpoint);
 
             var httpRetryPolicy =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -37,7 +37,7 @@ namespace PollyDemo.App.Demos
             var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularEndpoint));
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-            Logger.LogResponse(ActionType.Received, response.StatusCode, content);
+            Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
         }
     }
 }

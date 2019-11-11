@@ -46,12 +46,12 @@ namespace PollyDemo.App.Demos
             {
                 do
                 {
-                    Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularEndpoint);
+                    Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.IrregularEndpoint);
 
                     response = await policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularEndpoint));
                     var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-                    Logger.LogResponse(ActionType.Received, response.StatusCode, content);
+                    Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
                 }
                 while (!response.IsSuccessStatusCode);
             }

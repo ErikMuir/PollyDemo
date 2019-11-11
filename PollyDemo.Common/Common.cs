@@ -18,11 +18,8 @@ namespace PollyDemo.Common
 
     public enum ActionType
     {
-        [Description("Sending")]
-        Sending,
-
-        [Description("Received")]
-        Received,
+        Send,
+        Receive,
     }
 
     public interface IDemo
@@ -37,12 +34,14 @@ namespace PollyDemo.Common
             IsEndOfLine = false,
         };
 
+        public static void LogRequest(ActionType actionType, string endpoint) => LogRequest(actionType, HttpMethod.Get, endpoint);
+
         public static void LogRequest(ActionType actionType, HttpMethod method, string endpoint)
         {
             ConsoleTools.LineFeed();
             ConsoleTools.Info($"{actionType} request: ", _noEOL);
             ConsoleTools.Warning($"{method.ToString().ToUpper()} {Constants.BaseAddress}{endpoint}", _noEOL);
-            if (actionType == ActionType.Sending) ConsoleTools.Warning(" ...", _noEOL);
+            if (actionType == ActionType.Send) ConsoleTools.Warning(" ...", _noEOL);
             ConsoleTools.LineFeed();
         }
 

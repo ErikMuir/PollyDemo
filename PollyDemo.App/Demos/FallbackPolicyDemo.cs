@@ -24,7 +24,7 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 2 - Fallback Policy");
             Console.ReadKey(true);
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailEndpoint);
+            Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.FailEndpoint);
 
             var fallbackValue = "Unknown";
             var serializedFallbackValue = JsonConvert.SerializeObject(fallbackValue);
@@ -39,7 +39,7 @@ namespace PollyDemo.App.Demos
             var response = await fallbackPolicy.ExecuteAsync(() => _httpClient.GetAsync(Constants.FailEndpoint));
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-            Logger.LogResponse(ActionType.Received, response.StatusCode, content);
+            Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
         }
     }
 }

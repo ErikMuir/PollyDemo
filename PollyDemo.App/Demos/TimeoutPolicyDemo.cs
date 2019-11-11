@@ -24,7 +24,7 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 6 - Timeout Policy");
             Console.ReadKey(true);
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowEndpoint);
+            Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.SlowEndpoint);
 
             var timeoutPolicy = Policy.TimeoutAsync(5, TimeoutStrategy.Optimistic);
 
@@ -35,7 +35,7 @@ namespace PollyDemo.App.Demos
                     CancellationToken.None);
                 var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-                Logger.LogResponse(ActionType.Received, response.StatusCode, content);
+                Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
             }
             catch (TimeoutRejectedException e)
             {
