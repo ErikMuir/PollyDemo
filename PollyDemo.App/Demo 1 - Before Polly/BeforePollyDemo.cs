@@ -17,7 +17,9 @@ namespace PollyDemo.App.Demos
 
         public async Task Run()
         {
+            Console.Clear();
             Console.WriteLine("Demo 1 - Without Polly");
+            Console.ReadKey(true);
 
             Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailEndpoint);
 

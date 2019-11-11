@@ -18,7 +18,9 @@ namespace PollyDemo.App.Demos
 
         public async Task Run()
         {
+            Console.Clear();
             Console.WriteLine("Demo 4 - Wait and Retry Policy");
+            Console.ReadKey(true);
 
             Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.IrregularEndpoint);
 

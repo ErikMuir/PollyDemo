@@ -21,7 +21,9 @@ namespace PollyDemo.App.Demos
 
         public async Task Run()
         {
+            Console.Clear();
             Console.WriteLine("Demo 7 - Policy Wrapping");
+            Console.ReadKey(true);
 
             Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.SlowEndpoint);
 

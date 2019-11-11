@@ -20,7 +20,9 @@ namespace PollyDemo.App.Demos
 
         public async Task Run()
         {
+            Console.Clear();
             Console.WriteLine("Demo 5 - Policy Delegates");
+            Console.ReadKey(true);
 
             var expiredToken = new AuthenticationHeaderValue("Bearer", "expired-token");
             var freshToken = new AuthenticationHeaderValue("Bearer", "fresh-token");

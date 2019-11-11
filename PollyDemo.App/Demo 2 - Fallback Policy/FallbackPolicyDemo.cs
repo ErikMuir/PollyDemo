@@ -20,7 +20,9 @@ namespace PollyDemo.App.Demos
 
         public async Task Run()
         {
+            Console.Clear();
             Console.WriteLine("Demo 2 - Fallback Policy");
+            Console.ReadKey(true);
 
             Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailEndpoint);
 

@@ -19,7 +19,9 @@ namespace PollyDemo.App.Demos
 
         public async Task Run()
         {
+            Console.Clear();
             Console.WriteLine("Demo 9 - Circuit Breaker Policy (recovers)");
+            Console.ReadKey(true);
 
             var retry = Policy
                 .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
