@@ -11,7 +11,7 @@ namespace PollyDemo.App
     public class AppClient
     {
         private readonly HttpClient _httpClient;
-        private readonly IDemo _beforePolicyDemo;
+        private readonly IDemo _withoutPollyDemo;
         private readonly IDemo _fallbackPolicyDemo;
         private readonly IDemo _retryPolicyDemo;
         private readonly IDemo _waitAndRetryPolicyDemo;
@@ -25,7 +25,7 @@ namespace PollyDemo.App
         {
             _httpClient = client;
 
-            _beforePolicyDemo = new BeforePollyDemo(_httpClient);
+            _withoutPollyDemo = new WithoutPollyDemo(_httpClient);
             _fallbackPolicyDemo = new FallbackPolicyDemo(_httpClient);
             _retryPolicyDemo = new RetryPolicyDemo(_httpClient);
             _waitAndRetryPolicyDemo = new WaitAndRetryPolicyDemo(_httpClient);
@@ -74,7 +74,7 @@ namespace PollyDemo.App
             switch (menuOption)
             {
                 case '1':
-                    await _beforePolicyDemo.Run();
+                    await _withoutPollyDemo.Run();
                     break;
                 case '2':
                     await _fallbackPolicyDemo.Run();
