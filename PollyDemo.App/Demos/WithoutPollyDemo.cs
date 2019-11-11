@@ -21,12 +21,12 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 1 - Without Polly");
             Console.ReadKey(true);
 
-            Logger.LogRequest(ActionType.Sending, HttpMethod.Get, Constants.FailEndpoint);
+            Logger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.FailEndpoint);
 
             var response = await _httpClient.GetAsync(Constants.FailEndpoint);
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
-            Logger.LogResponse(ActionType.Received, response.StatusCode, content);
+            Logger.LogResponse(ActionType.Receive, response.StatusCode, content);
         }
     }
 }
