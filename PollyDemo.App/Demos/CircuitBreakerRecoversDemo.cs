@@ -46,9 +46,9 @@ namespace PollyDemo.App.Demos
             {
                 do
                 {
-                    DemoLogger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.IrregularEndpoint);
+                    DemoLogger.LogRequest(ActionType.Send, "/irregular");
 
-                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.IrregularEndpoint));
+                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync("/irregular"));
                     var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
                     DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);

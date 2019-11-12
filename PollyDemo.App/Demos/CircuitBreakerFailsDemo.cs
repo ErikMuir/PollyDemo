@@ -47,9 +47,9 @@ namespace PollyDemo.App.Demos
             {
                 do
                 {
-                    DemoLogger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.FailEndpoint);
+                    DemoLogger.LogRequest(ActionType.Send, "/fail");
 
-                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(Constants.FailEndpoint));
+                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync("/fail"));
                     var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
                     DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);

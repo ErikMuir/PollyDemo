@@ -24,14 +24,14 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 6 - Timeout Policy");
             Console.ReadKey(true);
 
-            DemoLogger.LogRequest(ActionType.Send, HttpMethod.Get, Constants.SlowEndpoint);
+            DemoLogger.LogRequest(ActionType.Send, "/slow");
 
             var timeoutPolicy = Policy.TimeoutAsync(5, TimeoutStrategy.Optimistic);
 
             try
             {
                 var response = await timeoutPolicy.ExecuteAsync(async token =>
-                    await _httpClient.GetAsync(Constants.SlowEndpoint, token),
+                    await _httpClient.GetAsync("/slow", token),
                     CancellationToken.None);
                 var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 

@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -7,15 +6,6 @@ using MuirDev.ConsoleTools;
 
 namespace PollyDemo.Common
 {
-    public static class Constants
-    {
-        public const string BaseAddress = "http://localhost:5000/api/WeatherForecast";
-        public const string FailEndpoint = "/fail";
-        public const string IrregularEndpoint = "/irregular";
-        public const string AuthEndpoint = "/auth";
-        public const string SlowEndpoint = "/slow";
-    }
-
     public enum ActionType
     {
         Send,
@@ -40,7 +30,7 @@ namespace PollyDemo.Common
         {
             ConsoleTools.LineFeed();
             ConsoleTools.Info($"{actionType} request: ", _noEOL);
-            ConsoleTools.Warning($"{method.ToString().ToUpper()} {Constants.BaseAddress}{endpoint}", _noEOL);
+            ConsoleTools.Warning($"{method.ToString().ToUpper()} http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL);
             if (actionType == ActionType.Send) ConsoleTools.Warning(" ...", _noEOL);
             ConsoleTools.LineFeed();
         }
