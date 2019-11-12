@@ -27,7 +27,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/fail")]
         public async Task<IActionResult> Fail()
         {
-            DemoLogger.LogRequest(ActionType.Receive, Constants.FailEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, "/fail");
             await Task.Delay(_simulateDataProcessing);
             return ErrorResponse();
         }
@@ -35,7 +35,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/irregular")]
         public async Task<IActionResult> Irregular()
         {
-            DemoLogger.LogRequest(ActionType.Receive, Constants.IrregularEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, "/irregular");
             await Task.Delay(_simulateDataProcessing);
             var isFourthRequest = ++_irregularRequestCount % 4 == 0;
             return isFourthRequest ? OkResponse() : ErrorResponse();
@@ -44,7 +44,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/auth")]
         public async Task<IActionResult> Auth()
         {
-            DemoLogger.LogRequest(ActionType.Receive, Constants.AuthEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, "/auth");
             await Task.Delay(_simulateDataProcessing);
             var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
             return isAuthenticated ? OkResponse() : UnauthorizedResponse();
@@ -53,7 +53,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/slow")]
         public async Task<IActionResult> Slow()
         {
-            DemoLogger.LogRequest(ActionType.Receive, Constants.SlowEndpoint);
+            DemoLogger.LogRequest(ActionType.Receive, "/slow");
             await Task.Delay(_simulateHangingService);
             return TimeoutResponse();
         }
