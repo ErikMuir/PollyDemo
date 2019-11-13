@@ -10,11 +10,11 @@ using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {
-    public class PolicyWrappingDemo : IDemo
+    public class Wrap : IDemo
     {
         private HttpClient _httpClient;
 
-        public PolicyWrappingDemo(HttpClient client)
+        public Wrap(HttpClient client)
         {
             _httpClient = client;
         }
@@ -25,7 +25,7 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 7 - Policy Wrapping");
             Console.ReadKey(true);
 
-            DemoLogger.LogRequest(ActionType.Send, "/slow");
+            DemoLogger.LogRequest(ActionType.Send, "/timeout");
 
             var timeoutPolicy = Policy.TimeoutAsync(2);
 
@@ -50,13 +50,13 @@ namespace PollyDemo.App.Demos
             //     fallbackPolicy.ExecuteAsync(() =>
             //        retryPolicy.ExecuteAsync(() =>
             //            timeoutPolicy.ExecuteAsync(async token =>
-            //                await _httpClient.GetAsync(Constants.SlowRequest, token),
+            //                await _httpClient.GetAsync("/timeout", token),
             //                CancellationToken.None)));
 
             var wrappedPolicy = Policy.WrapAsync(fallbackPolicy, retryPolicy).WrapAsync(timeoutPolicy);
 
             var response = await wrappedPolicy.ExecuteAsync(async token =>
-                await _httpClient.GetAsync("/slow", token),
+                await _httpClient.GetAsync("/timeout", token),
                 CancellationToken.None);
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 

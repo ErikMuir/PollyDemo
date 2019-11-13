@@ -8,11 +8,11 @@ using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {
-    public class CircuitBreakerFailsDemo : IDemo
+    public class CircuitBreakerFails : IDemo
     {
         private HttpClient _httpClient;
 
-        public CircuitBreakerFailsDemo(HttpClient client)
+        public CircuitBreakerFails(HttpClient client)
         {
             _httpClient = client;
 
