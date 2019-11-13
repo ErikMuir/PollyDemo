@@ -17,17 +17,19 @@ namespace PollyDemo.App
 
         public async Task Run()
         {
+            const string endpoint = "/";
+
+            #region -- Pre-Call Logging --
             await Clear();
-
-            var endpoint = "/fail";
-
             DemoLogger.LogRequest(ActionType.Send, endpoint);
+            #endregion
 
             var response = await _httpClient.GetAsync(endpoint);
-
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
+            #region -- Post-Call Logging --
             DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);
+            #endregion
         }
 
         private async Task Clear()
