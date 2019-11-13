@@ -2,7 +2,6 @@ using System;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using PollyDemo.Common;
 
 namespace PollyDemo.App
 {
@@ -11,6 +10,7 @@ namespace PollyDemo.App
         static async Task Main()
         {
             var services = new ServiceCollection();
+
             services.AddHttpClient<AppClient>(x =>
             {
                 x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
