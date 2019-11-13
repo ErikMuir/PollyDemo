@@ -31,7 +31,6 @@ namespace PollyDemo.Common
             ConsoleTools.LineFeed();
             ConsoleTools.Info($"{actionType} request: ", _noEOL);
             ConsoleTools.Warning($"{method.ToString().ToUpper()} http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL);
-            if (actionType == ActionType.Send) ConsoleTools.Warning(" ...", _noEOL);
             ConsoleTools.LineFeed();
         }
 
