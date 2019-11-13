@@ -19,9 +19,11 @@ namespace PollyDemo.Api.Controllers
         private static int _simulateHangingService = 10000;
 
         [HttpGet("/")]
-        public string Get()
+        public async Task<IActionResult> Get()
         {
-            return GetForecast();
+            DemoLogger.LogRequest(ActionType.Receive, "/");
+            await Task.Delay(_simulateDataProcessing);
+            return OkResponse();
         }
 
         [HttpGet("/fail")]
@@ -50,10 +52,10 @@ namespace PollyDemo.Api.Controllers
             return isAuthenticated ? OkResponse() : UnauthorizedResponse();
         }
 
-        [HttpGet("/slow")]
-        public async Task<IActionResult> Slow()
+        [HttpGet("/timeout")]
+        public async Task<IActionResult> Timeout()
         {
-            DemoLogger.LogRequest(ActionType.Receive, "/slow");
+            DemoLogger.LogRequest(ActionType.Receive, "/timeout");
             await Task.Delay(_simulateHangingService);
             return TimeoutResponse();
         }
