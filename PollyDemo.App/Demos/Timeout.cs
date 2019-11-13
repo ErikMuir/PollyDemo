@@ -9,11 +9,11 @@ using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {
-    public class TimeoutPolicyDemo : IDemo
+    public class Timeout : IDemo
     {
         private HttpClient _httpClient;
 
-        public TimeoutPolicyDemo(HttpClient client)
+        public Timeout(HttpClient client)
         {
             _httpClient = client;
         }
@@ -24,14 +24,14 @@ namespace PollyDemo.App.Demos
             Console.WriteLine("Demo 6 - Timeout Policy");
             Console.ReadKey(true);
 
-            DemoLogger.LogRequest(ActionType.Send, "/slow");
+            DemoLogger.LogRequest(ActionType.Send, "/timeout");
 
             var timeoutPolicy = Policy.TimeoutAsync(5, TimeoutStrategy.Optimistic);
 
             try
             {
                 var response = await timeoutPolicy.ExecuteAsync(async token =>
-                    await _httpClient.GetAsync("/slow", token),
+                    await _httpClient.GetAsync("/timeout", token),
                     CancellationToken.None);
                 var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 

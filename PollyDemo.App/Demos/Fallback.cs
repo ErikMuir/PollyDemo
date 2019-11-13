@@ -9,11 +9,11 @@ using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {
-    public class FallbackPolicyDemo : IDemo
+    public class Fallback : IDemo
     {
         private HttpClient _httpClient;
 
-        public FallbackPolicyDemo(HttpClient client)
+        public Fallback(HttpClient client)
         {
             _httpClient = client;
         }

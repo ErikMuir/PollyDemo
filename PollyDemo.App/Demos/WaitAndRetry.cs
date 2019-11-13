@@ -7,11 +7,11 @@ using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {
-    public class RetryPolicyDemo : IDemo
+    public class WaitAndRetry : IDemo
     {
         private HttpClient _httpClient;
 
-        public RetryPolicyDemo(HttpClient client)
+        public WaitAndRetry(HttpClient client)
         {
             _httpClient = client;
         }
@@ -19,14 +19,20 @@ namespace PollyDemo.App.Demos
         public async Task Run()
         {
             Console.Clear();
-            Console.WriteLine("Demo 3 - Retry Policy");
+            Console.WriteLine("Demo 4 - Wait and Retry Policy");
             Console.ReadKey(true);
 
             DemoLogger.LogRequest(ActionType.Send, "/irregular");
 
             var httpRetryPolicy =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                    .RetryAsync(3);
+                    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
+            //.WaitAndRetryAsync(new[]
+            //{
+            //    TimeSpan.FromSeconds(1),
+            //    TimeSpan.FromSeconds(2),
+            //    TimeSpan.FromSeconds(3),
+            //});
 
             var response = await httpRetryPolicy.ExecuteAsync(() => _httpClient.GetAsync("/irregular"));
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());

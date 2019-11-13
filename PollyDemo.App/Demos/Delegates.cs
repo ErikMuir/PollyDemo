@@ -9,11 +9,11 @@ using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {
-    public class PolicyDelegatesDemo : IDemo
+    public class Delegates : IDemo
     {
         private HttpClient _httpClient;
 
-        public PolicyDelegatesDemo(HttpClient client)
+        public Delegates(HttpClient client)
         {
             _httpClient = client;
         }

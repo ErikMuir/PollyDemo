@@ -6,11 +6,11 @@ using PollyDemo.Common;
 
 namespace PollyDemo.App.Demos
 {
-    public class WithoutPollyDemo : IDemo
+    public class WithoutPolly : IDemo
     {
         private HttpClient _httpClient;
 
-        public WithoutPollyDemo(HttpClient client)
+        public WithoutPolly(HttpClient client)
         {
             _httpClient = client;
         }
