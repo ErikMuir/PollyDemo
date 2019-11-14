@@ -7,11 +7,11 @@ namespace PollyDemo.App
 {
     public class Program
     {
-        static async Task Main()
+        static async Task Main(string[] args)
         {
             var services = new ServiceCollection();
 
-            services.AddHttpClient<AppClient>(x =>
+            services.AddHttpClient<App>(x =>
             {
                 x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
                 x.DefaultRequestHeaders.Accept.Clear();
@@ -19,7 +19,7 @@ namespace PollyDemo.App
             });
 
             var serviceProvider = services.BuildServiceProvider();
-            var app = serviceProvider.GetRequiredService<AppClient>();
+            var app = serviceProvider.GetRequiredService<App>();
 
             await app.Run();
         }
