@@ -6,7 +6,7 @@ using Polly;
 using Polly.CircuitBreaker;
 using PollyDemo.Common;
 
-namespace PollyDemo.App.Demos
+namespace PollyDemo.App
 {
     public class CircuitBreakerFails : IDemo
     {

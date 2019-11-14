@@ -8,7 +8,7 @@ using Polly;
 using Polly.Timeout;
 using PollyDemo.Common;
 
-namespace PollyDemo.App.Demos
+namespace PollyDemo.App
 {
     public class Wrap : IDemo
     {

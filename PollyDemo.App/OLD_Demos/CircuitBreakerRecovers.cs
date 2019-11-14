@@ -6,7 +6,7 @@ using Polly;
 using Polly.CircuitBreaker;
 using PollyDemo.Common;
 
-namespace PollyDemo.App.Demos
+namespace PollyDemo.App
 {
     public class CircuitBreakerRecovers : IDemo
     {
@@ -46,9 +46,9 @@ namespace PollyDemo.App.Demos
             {
                 do
                 {
-                    DemoLogger.LogRequest(ActionType.Send, "/irregular");
+                    DemoLogger.LogRequest(ActionType.Send, "/fail/4");
 
-                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync("/irregular"));
+                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync("/fail/4"));
                     var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
                     DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);

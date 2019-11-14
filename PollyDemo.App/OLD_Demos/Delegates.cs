@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using Polly;
 using PollyDemo.Common;
 
-namespace PollyDemo.App.Demos
+namespace PollyDemo.App
 {
     public class Delegates : IDemo
     {
