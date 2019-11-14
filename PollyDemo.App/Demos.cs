@@ -7,9 +7,9 @@ using Polly;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 
-namespace PollyDemo.App.Demos
+namespace PollyDemo.App
 {
-    public partial class Demos
+    public class Demos
     {
         private readonly HttpClient _httpClient;
 
@@ -26,21 +26,42 @@ namespace PollyDemo.App.Demos
             var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
         }
 
-        public async void WithoutPolly()
+        public async void RetryWithoutPolly()
         {
-            const string endpoint = "/fail";
+            const string endpoint = "/fail/2";
 
-            var response = await _httpClient.GetAsync(endpoint);
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
+            HttpResponseMessage response = null;
+            for (int retryLimit = 0; retryLimit <= 3; retryLimit++)
+            {
+                response = await _httpClient.GetAsync(endpoint);
+                if (response.IsSuccessStatusCode)
+                {
+                    break;
+                }
+            }
+
+            var content = JsonConvert.DeserializeObject<string>(await response?.Content?.ReadAsStringAsync());
         }
 
-        public async void RetryOnce()
+        public async void HandleResultRetry()
         {
-            const string endpoint = "/fail";
+            const string endpoint = "/fail/2";
 
             var policy = Policy
                 .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .Or<HttpRequestException>()
+                .RetryAsync();
+
+            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
+        }
+
+        public async void HandleTransientHttpErrorRetry()
+        {
+            const string endpoint = "/fail/2";
+
+            // Handles HttpRequestException, Http status codes >= 500 (server errors) and status code 408 (request timeout)
+            var policy = HttpPolicyExtensions
+                .HandleTransientHttpError()
                 .RetryAsync();
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
@@ -51,9 +72,8 @@ namespace PollyDemo.App.Demos
         {
             const string endpoint = "/fail";
 
-            var policy = Policy
-                .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .Or<HttpRequestException>()
+            var policy = HttpPolicyExtensions
+                .HandleTransientHttpError()
                 .RetryForeverAsync();
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
@@ -62,11 +82,10 @@ namespace PollyDemo.App.Demos
 
         public async void RetryNTimes()
         {
-            const string endpoint = "/irregular";
+            const string endpoint = "/fail/4";
 
-            var policy = Policy
-                .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .Or<HttpRequestException>()
+            var policy = HttpPolicyExtensions
+                .HandleTransientHttpError()
                 .RetryAsync(3);
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
@@ -75,11 +94,10 @@ namespace PollyDemo.App.Demos
 
         public async void WaitAndRetryLinear()
         {
-            const string endpoint = "/irregular";
+            const string endpoint = "/fail/4";
 
-            var policy = Policy
-                .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .Or<HttpRequestException>()
+            var policy = HttpPolicyExtensions
+                .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, x => TimeSpan.FromMilliseconds(500));
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
@@ -88,22 +106,8 @@ namespace PollyDemo.App.Demos
 
         public async void WaitAndRetryLogarithmic()
         {
-            const string endpoint = "/irregular";
+            const string endpoint = "/fail/4";
 
-            var policy = Policy
-                .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .Or<HttpRequestException>()
-                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
-
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
-        }
-
-        public async void HandleTransientHttpError()
-        {
-            const string endpoint = "/irregular";
-
-            // Handles HttpRequestException, Http status codes >= 500 (server errors) and status code 408 (request timeout)
             var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
@@ -124,7 +128,7 @@ namespace PollyDemo.App.Demos
             var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);
 
             services
-                .AddHttpClient<AppClient>(x =>
+                .AddHttpClient<App>(x =>
                 {
                     x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
                     x.DefaultRequestHeaders.Accept.Clear();
