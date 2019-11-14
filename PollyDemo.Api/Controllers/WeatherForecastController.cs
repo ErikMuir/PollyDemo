@@ -14,9 +14,7 @@ namespace PollyDemo.Api.Controllers
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
-        private static int _irregularRequestCount = 0;
-        private static int _simulateDataProcessing = 250;
-        private static int _simulateHangingService = 10000;
+
 
         [HttpGet("/")]
         public async Task<IActionResult> Get()
@@ -26,21 +24,13 @@ namespace PollyDemo.Api.Controllers
             return OkResponse();
         }
 
-        [HttpGet("/fail")]
-        public async Task<IActionResult> Fail()
+        [HttpGet("/fail/{count}")]
+        public async Task<IActionResult> Fail(int count)
         {
             DemoLogger.LogRequest(ActionType.Receive, "/fail");
             await Task.Delay(_simulateDataProcessing);
-            return ErrorResponse();
-        }
-
-        [HttpGet("/irregular")]
-        public async Task<IActionResult> Irregular()
-        {
-            DemoLogger.LogRequest(ActionType.Receive, "/irregular");
-            await Task.Delay(_simulateDataProcessing);
-            var isFourthRequest = ++_irregularRequestCount % 4 == 0;
-            return isFourthRequest ? OkResponse() : ErrorResponse();
+            if (count == 0) return ErrorResponse();
+            return ++_failCount > count ? OkResponse() : ErrorResponse();
         }
 
         [HttpGet("/auth")]
@@ -61,12 +51,17 @@ namespace PollyDemo.Api.Controllers
         }
 
 
-        #region -- Demo Orchestration --
+        #region "Demo Orchestration"
+
+        private static int _failCount = 0;
+        private static int _simulateDataProcessing = 500;
+        private static int _simulateHangingService = 10000;
 
         [HttpGet("/clear")]
         public IActionResult Clear()
         {
             Console.Clear();
+            _failCount = 0;
             return Ok();
         }
 
@@ -76,10 +71,6 @@ namespace PollyDemo.Api.Controllers
             Environment.Exit(0);
             return Ok();
         }
-
-        #endregion
-
-        #region -- Private Helper Methods --
 
         private IActionResult SendResponse(HttpStatusCode statusCode, string content = null)
         {
