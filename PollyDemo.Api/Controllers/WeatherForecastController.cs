@@ -24,7 +24,7 @@ namespace PollyDemo.Api.Controllers
             return OkResponse();
         }
 
-        [HttpGet("/fail/{count}")]
+        [HttpGet("/fail/{*count}")]
         public async Task<IActionResult> Fail(int count)
         {
             DemoLogger.LogRequest(ActionType.Receive, "/fail");
