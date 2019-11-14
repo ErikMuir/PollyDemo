@@ -21,7 +21,7 @@ namespace PollyDemo.Api.Controllers
         {
             DemoLogger.LogRequest(ActionType.Receive, "/");
             await Task.Delay(_simulateDataProcessing);
-            return OkResponse();
+            return await OkResponse();
         }
 
         [HttpGet("/fail/{*count}")]
@@ -29,8 +29,9 @@ namespace PollyDemo.Api.Controllers
         {
             DemoLogger.LogRequest(ActionType.Receive, "/fail");
             await Task.Delay(_simulateDataProcessing);
-            if (count == 0) return ErrorResponse();
-            return ++_failCount > count ? OkResponse() : ErrorResponse();
+            if (count == 0) return await ErrorResponse();
+            var isOk = ++_failCount > count;
+            return isOk ? await OkResponse() : await ErrorResponse();
         }
 
         [HttpGet("/auth")]
@@ -39,7 +40,7 @@ namespace PollyDemo.Api.Controllers
             DemoLogger.LogRequest(ActionType.Receive, "/auth");
             await Task.Delay(_simulateDataProcessing);
             var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
-            return isAuthenticated ? OkResponse() : UnauthorizedResponse();
+            return isAuthenticated ? await OkResponse() : await UnauthorizedResponse();
         }
 
         [HttpGet("/timeout")]
@@ -47,7 +48,7 @@ namespace PollyDemo.Api.Controllers
         {
             DemoLogger.LogRequest(ActionType.Receive, "/timeout");
             await Task.Delay(_simulateHangingService);
-            return TimeoutResponse();
+            return await TimeoutResponse();
         }
 
 
@@ -72,19 +73,20 @@ namespace PollyDemo.Api.Controllers
             return Ok();
         }
 
-        private IActionResult SendResponse(HttpStatusCode statusCode, string content = null)
+        private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
         {
             DemoLogger.LogResponse(ActionType.Send, statusCode, content);
+            await Task.Delay(250);
             return StatusCode((int)statusCode, content);
         }
 
-        private IActionResult OkResponse() => SendResponse(HttpStatusCode.OK, GetForecast());
+        private async Task<IActionResult> OkResponse() => await SendResponse(HttpStatusCode.OK, GetForecast());
 
-        private IActionResult ErrorResponse() => SendResponse(HttpStatusCode.InternalServerError);
+        private async Task<IActionResult> ErrorResponse() => await SendResponse(HttpStatusCode.InternalServerError);
 
-        private IActionResult TimeoutResponse() => SendResponse(HttpStatusCode.RequestTimeout);
+        private async Task<IActionResult> TimeoutResponse() => await SendResponse(HttpStatusCode.RequestTimeout);
 
-        private IActionResult UnauthorizedResponse() => SendResponse(HttpStatusCode.Unauthorized);
+        private async Task<IActionResult> UnauthorizedResponse() => await SendResponse(HttpStatusCode.Unauthorized);
 
         private string GetForecast()
         {

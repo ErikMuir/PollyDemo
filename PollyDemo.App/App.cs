@@ -28,6 +28,7 @@ namespace PollyDemo.App
                 Console.ReadKey(true);
                 await Clear();
                 DemoLogger.LogRequest(ActionType.Send, endpoint);
+                await Task.Delay(250);
                 #endregion
 
 
