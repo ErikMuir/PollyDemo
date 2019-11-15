@@ -23,7 +23,6 @@ namespace PollyDemo.App
             const string endpoint = "/";
 
             var response = await _httpClient.GetAsync(endpoint);
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
         }
 
         public async void RetryWithoutPolly()
@@ -40,33 +39,20 @@ namespace PollyDemo.App
                     break;
                 }
             }
-
-            var content = JsonConvert.DeserializeObject<string>(await response?.Content?.ReadAsStringAsync());
         }
 
-        public async void RetryOnce()
+        public async void BasicRetry()
         {
             const string endpoint = "/fail/1";
 
-            var policy = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode).RetryAsync();
-
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
-        }
-
-        public async void RetryNTimes()
-        {
-            const string endpoint = "/fail/3";
-
             var policy = Policy
                 .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .RetryAsync(3);
+                .RetryAsync();
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
         }
 
-        public async void RetryWithExtensions()
+        public async void TransientErrorRetry()
         {
             const string endpoint = "/fail/1";
 
@@ -75,19 +61,6 @@ namespace PollyDemo.App
                 .RetryAsync();
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
-        }
-
-        public async void RetryForever()
-        {
-            const string endpoint = "/fail";
-
-            var policy = HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .RetryForeverAsync();
-
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
         }
 
         public async void WaitAndRetryLinear()
@@ -96,10 +69,9 @@ namespace PollyDemo.App
 
             var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .WaitAndRetryAsync(3, x => TimeSpan.FromMilliseconds(500));
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromMilliseconds(500));
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
         }
 
         public async void WaitAndRetryLogarithmic()
@@ -111,7 +83,6 @@ namespace PollyDemo.App
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-            var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
         }
 
         public void ConfigureInStartup()
