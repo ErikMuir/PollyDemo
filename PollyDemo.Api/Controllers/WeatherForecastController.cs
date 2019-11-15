@@ -64,7 +64,7 @@ namespace PollyDemo.Api.Controllers
         #region "Demo Orchestration"
 
         private static int _failCount = 0;
-        private static int _simulateDataProcessing = 500;
+        private static int _simulateDataProcessing = 250;
         private static int _simulateHangingService = 5000;
 
         private async new Task<IActionResult> Ok() => await SendResponse(HttpStatusCode.OK, GetForecast());
