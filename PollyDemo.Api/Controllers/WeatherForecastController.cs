@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using PollyDemo.Common;
@@ -21,7 +22,7 @@ namespace PollyDemo.Api.Controllers
         {
             DemoLogger.LogRequest(ActionType.Receive, "/");
             await Task.Delay(_simulateDataProcessing);
-            return await OkResponse();
+            return await Ok();
         }
 
         [HttpGet("/fail/{*count}")]
@@ -29,9 +30,17 @@ namespace PollyDemo.Api.Controllers
         {
             DemoLogger.LogRequest(ActionType.Receive, "/fail");
             await Task.Delay(_simulateDataProcessing);
-            if (count == 0) return await ErrorResponse();
+            if (count == 0) return await InternalServerError();
             var isOk = ++_failCount > count;
-            return isOk ? await OkResponse() : await ErrorResponse();
+            return isOk ? await Ok() : await InternalServerError();
+        }
+
+        [HttpGet("/bad")]
+        public async Task<IActionResult> Bad()
+        {
+            DemoLogger.LogRequest(ActionType.Receive, "/bad");
+            await Task.Delay(_simulateDataProcessing);
+            return await BadRequest();
         }
 
         [HttpGet("/auth")]
@@ -40,7 +49,7 @@ namespace PollyDemo.Api.Controllers
             DemoLogger.LogRequest(ActionType.Receive, "/auth");
             await Task.Delay(_simulateDataProcessing);
             var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
-            return isAuthenticated ? await OkResponse() : await UnauthorizedResponse();
+            return isAuthenticated ? await Ok() : await Unauthorized();
         }
 
         [HttpGet("/timeout")]
@@ -48,7 +57,7 @@ namespace PollyDemo.Api.Controllers
         {
             DemoLogger.LogRequest(ActionType.Receive, "/timeout");
             await Task.Delay(_simulateHangingService);
-            return await TimeoutResponse();
+            return await RequestTimeout();
         }
 
 
@@ -56,22 +65,13 @@ namespace PollyDemo.Api.Controllers
 
         private static int _failCount = 0;
         private static int _simulateDataProcessing = 500;
-        private static int _simulateHangingService = 10000;
+        private static int _simulateHangingService = 5000;
 
-        [HttpGet("/clear")]
-        public IActionResult Clear()
-        {
-            Console.Clear();
-            _failCount = 0;
-            return Ok();
-        }
-
-        [HttpGet("/shutdown")]
-        public IActionResult Shutdown()
-        {
-            Environment.Exit(0);
-            return Ok();
-        }
+        private async new Task<IActionResult> Ok() => await SendResponse(HttpStatusCode.OK, GetForecast());
+        private async new Task<IActionResult> BadRequest() => await SendResponse(HttpStatusCode.BadRequest);
+        private async Task<IActionResult> InternalServerError() => await SendResponse(HttpStatusCode.InternalServerError);
+        private async Task<IActionResult> RequestTimeout() => await SendResponse(HttpStatusCode.RequestTimeout);
+        private async new Task<IActionResult> Unauthorized() => await SendResponse(HttpStatusCode.Unauthorized);
 
         private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
         {
@@ -80,18 +80,25 @@ namespace PollyDemo.Api.Controllers
             return StatusCode((int)statusCode, content);
         }
 
-        private async Task<IActionResult> OkResponse() => await SendResponse(HttpStatusCode.OK, GetForecast());
-
-        private async Task<IActionResult> ErrorResponse() => await SendResponse(HttpStatusCode.InternalServerError);
-
-        private async Task<IActionResult> TimeoutResponse() => await SendResponse(HttpStatusCode.RequestTimeout);
-
-        private async Task<IActionResult> UnauthorizedResponse() => await SendResponse(HttpStatusCode.Unauthorized);
-
         private string GetForecast()
         {
             var rng = new Random();
             return _summaries[rng.Next(_summaries.Length)];
+        }
+
+        [HttpGet("/clear")]
+        public IActionResult Clear()
+        {
+            Console.Clear();
+            _failCount = 0;
+            return base.Ok();
+        }
+
+        [HttpGet("/shutdown")]
+        public IActionResult Shutdown()
+        {
+            Environment.Exit(0);
+            return base.Ok();
         }
 
         #endregion
