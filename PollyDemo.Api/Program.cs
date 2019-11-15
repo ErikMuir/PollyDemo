@@ -1,4 +1,3 @@
-using System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
@@ -8,7 +7,6 @@ namespace PollyDemo.Api
     {
         public static void Main(string[] args)
         {
-            Console.Clear();
             CreateHostBuilder(args).Build().Run();
         }
 

@@ -2,6 +2,8 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Polly;
+using Polly.Extensions.Http;
 using PollyDemo.Common;
 
 namespace PollyDemo.App
@@ -17,8 +19,6 @@ namespace PollyDemo.App
 
         public async Task Run()
         {
-            Console.Clear();
-
             while (true)
             {
                 const string endpoint = "/";
