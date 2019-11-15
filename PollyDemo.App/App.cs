@@ -24,7 +24,7 @@ namespace PollyDemo.App
                 const string endpoint = "/";
 
                 #region "Demo Orchestration - Log Request"
-                Console.Write("\nPress any key...");
+                Console.WriteLine("\nPress any key...");
                 Console.ReadKey(true);
                 await Clear();
                 DemoLogger.LogRequest(ActionType.Send, endpoint);
@@ -33,10 +33,10 @@ namespace PollyDemo.App
 
 
                 var response = await _httpClient.GetAsync(endpoint);
-                var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
 
 
                 #region "Demo Orchestration - Log Response"
+                var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
                 DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);
                 #endregion
             }
