@@ -54,7 +54,7 @@ namespace PollyDemo.App
 
         public static void LogException(Exception exception)
         {
-            ConsoleTools.Failure($"{exception.GetType()}: {exception.Message}");
+            _console.Failure($"{exception.GetType()}: {exception.Message}");
         }
     }
 }
