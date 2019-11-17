@@ -60,6 +60,14 @@ namespace PollyDemo.Api.Controllers
             return await RequestTimeout();
         }
 
+        [HttpGet("/setup")]
+        public IActionResult Setup()
+        {
+            Console.Clear();
+            _failCount = 0;
+            return base.Ok();
+        }
+
 
         #region "Demo Orchestration"
 
@@ -67,6 +75,7 @@ namespace PollyDemo.Api.Controllers
         private static int _simulateDataProcessing = 250;
         private static int _simulateHangingService = 5000;
 
+        private string GetForecast() => _summaries[new Random().Next(_summaries.Length)];
         private async new Task<IActionResult> Ok() => await SendResponse(HttpStatusCode.OK, GetForecast());
         private async new Task<IActionResult> BadRequest() => await SendResponse(HttpStatusCode.BadRequest);
         private async Task<IActionResult> InternalServerError() => await SendResponse(HttpStatusCode.InternalServerError);
@@ -78,20 +87,6 @@ namespace PollyDemo.Api.Controllers
             LogResponse(statusCode, content);
             await Task.Delay(250);
             return StatusCode((int)statusCode, content);
-        }
-
-        private string GetForecast()
-        {
-            var rng = new Random();
-            return _summaries[rng.Next(_summaries.Length)];
-        }
-
-        [HttpGet("/setup")]
-        public IActionResult SetupDemo()
-        {
-            Console.Clear();
-            _failCount = 0;
-            return base.Ok();
         }
 
         private static readonly LogOptions _noEOL = new LogOptions { IsEndOfLine = false };
