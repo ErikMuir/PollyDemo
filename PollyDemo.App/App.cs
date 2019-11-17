@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Polly;
 using Polly.Extensions.Http;
-using PollyDemo.Common;
+using MuirDev.ConsoleTools;
 
 namespace PollyDemo.App
 {
@@ -17,39 +17,27 @@ namespace PollyDemo.App
         public App(HttpClient client)
         {
             _httpClient = client;
+            _httpClient.GetAsync("/setup").Wait();
         }
 
         public async Task Run()
         {
-            while (true)
-            {
-                const string endpoint = "/";
+            const string endpoint = "/";
 
-                #region "Demo Orchestration - Log Request"
-                Console.WriteLine("\nPress any key...");
-                Console.ReadKey(true);
-                await Clear();
-                DemoLogger.LogRequest(ActionType.Send, endpoint);
-                await Task.Delay(250);
-                #endregion
+            var response = await _httpClient.GetAsync(endpoint);
 
-
-                var response = await _httpClient.GetAsync(endpoint);
-
-
-                #region "Demo Orchestration - Log Response"
-                var content = JsonConvert.DeserializeObject<string>(await response.Content?.ReadAsStringAsync());
-                DemoLogger.LogResponse(ActionType.Receive, response.StatusCode, content);
-                #endregion
-            }
+            await LogResponse(response);
         }
 
-        #region "Demo Orchestration"
-        private async Task Clear()
+        private static async Task LogResponse(HttpResponseMessage response)
         {
-            Console.Clear();
-            await _httpClient.GetAsync("/clear");
+            var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync()) ?? "Unknown";
+            Console.WriteLine($"Tomorrow's forecast: {content}");
         }
-        #endregion
+
+        private static void LogException(Exception exception)
+        {
+            ConsoleTools.Failure($"{exception.GetType()}: {exception.Message}");
+        }
     }
 }
