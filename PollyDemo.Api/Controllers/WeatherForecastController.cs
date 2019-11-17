@@ -86,18 +86,11 @@ namespace PollyDemo.Api.Controllers
             return _summaries[rng.Next(_summaries.Length)];
         }
 
-        [HttpGet("/clear")]
-        public IActionResult Clear()
+        [HttpGet("/setup")]
+        public IActionResult SetupDemo()
         {
             Console.Clear();
             _failCount = 0;
-            return base.Ok();
-        }
-
-        [HttpGet("/shutdown")]
-        public IActionResult Shutdown()
-        {
-            Environment.Exit(0);
             return base.Ok();
         }
 
