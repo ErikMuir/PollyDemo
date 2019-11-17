@@ -2,7 +2,6 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Polly;
 using Polly.Extensions.Http;
 using Polly.Timeout;
@@ -16,13 +15,6 @@ namespace PollyDemo.App
         public Demos(HttpClient client)
         {
             _httpClient = client;
-        }
-
-        public async void HappyPath()
-        {
-            const string endpoint = "/";
-
-            var response = await _httpClient.GetAsync(endpoint);
         }
 
         public async void RetryWithoutPolly()
