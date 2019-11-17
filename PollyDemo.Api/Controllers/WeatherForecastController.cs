@@ -1,9 +1,8 @@
 using System;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using PollyDemo.Common;
+using MuirDev.ConsoleTools;
 
 namespace PollyDemo.Api.Controllers
 {
@@ -20,7 +19,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/")]
         public async Task<IActionResult> Get()
         {
-            DemoLogger.LogRequest(ActionType.Receive, "/");
+            LogRequest("/");
             await Task.Delay(_simulateDataProcessing);
             return await Ok();
         }
@@ -28,17 +27,17 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/fail/{*count}")]
         public async Task<IActionResult> Fail(int count)
         {
-            DemoLogger.LogRequest(ActionType.Receive, "/fail");
+            LogRequest("/fail");
             await Task.Delay(_simulateDataProcessing);
             if (count == 0) return await InternalServerError();
             var isOk = ++_failCount > count;
             return isOk ? await Ok() : await InternalServerError();
         }
 
-        [HttpGet("/bad")]
+        [HttpGet("/bad-request")]
         public async Task<IActionResult> Bad()
         {
-            DemoLogger.LogRequest(ActionType.Receive, "/bad");
+            LogRequest("/bad-request");
             await Task.Delay(_simulateDataProcessing);
             return await BadRequest();
         }
@@ -46,16 +45,17 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/auth")]
         public async Task<IActionResult> Auth()
         {
-            DemoLogger.LogRequest(ActionType.Receive, "/auth");
+            LogRequest("/auth");
             await Task.Delay(_simulateDataProcessing);
             var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
             return isAuthenticated ? await Ok() : await Unauthorized();
         }
 
-        [HttpGet("/timeout")]
-        public async Task<IActionResult> Timeout()
+        [HttpGet("/timeout/{*count}")]
+        public async Task<IActionResult> Timeout(int count)
         {
-            DemoLogger.LogRequest(ActionType.Receive, "/timeout");
+            LogRequest("/timeout");
+            if (++_failCount > count) return await Ok();
             await Task.Delay(_simulateHangingService);
             return await RequestTimeout();
         }
@@ -75,7 +75,7 @@ namespace PollyDemo.Api.Controllers
 
         private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
         {
-            DemoLogger.LogResponse(ActionType.Send, statusCode, content);
+            LogResponse(statusCode, content);
             await Task.Delay(250);
             return StatusCode((int)statusCode, content);
         }
@@ -99,6 +99,32 @@ namespace PollyDemo.Api.Controllers
         {
             Environment.Exit(0);
             return base.Ok();
+        }
+
+        private static readonly LogOptions _noEOL = new LogOptions { IsEndOfLine = false };
+
+        private static void LogRequest(string endpoint)
+        {
+            ConsoleTools.LineFeed();
+            ConsoleTools.Info("Received request: ", _noEOL);
+            ConsoleTools.Warning($"GET http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL);
+            ConsoleTools.LineFeed();
+        }
+
+        private static void LogResponse(HttpStatusCode statusCode, string content)
+        {
+            ConsoleTools.Info("Sending response: ", _noEOL);
+            var isSuccessStatusCode = (int)statusCode >= 200 && (int)statusCode < 300;
+            var logOptions = new LogOptions
+            {
+                ForegroundColor = isSuccessStatusCode
+                    ? ConsoleColor.DarkGreen
+                    : ConsoleColor.DarkRed,
+                IsEndOfLine = false,
+            };
+            ConsoleTools.Info($"{(int)statusCode} {statusCode}", logOptions);
+            if (!string.IsNullOrWhiteSpace(content)) ConsoleTools.Info($" : {content}", logOptions);
+            ConsoleTools.LineFeed();
         }
 
         #endregion
