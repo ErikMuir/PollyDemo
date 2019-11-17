@@ -54,7 +54,7 @@ namespace PollyDemo.App
         {
             while (true)
             {
-                await Clear();
+                await Setup();
                 Console.Clear();
                 var response = _menu.Run();
                 if (response == 'q')
@@ -108,9 +108,9 @@ namespace PollyDemo.App
             Console.ReadKey(true);
         }
 
-        private async Task Clear()
+        private async Task Setup()
         {
-            await _httpClient.GetAsync("/clear");
+            await _httpClient.GetAsync("/setup");
         }
 
         private void Shutdown()
