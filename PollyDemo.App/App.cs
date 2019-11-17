@@ -21,15 +21,6 @@ namespace PollyDemo.App
             Console.Clear();
         }
 
-        public async Task Run()
-        {
-            const string endpoint = "/";
-
-            var response = await _httpClient.GetAsync(endpoint);
-
-            await LogResponse(response);
-        }
-
         private static async Task LogResponse(HttpResponseMessage response)
         {
             var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync()) ?? "Unknown";
@@ -39,6 +30,13 @@ namespace PollyDemo.App
         private static void LogException(Exception exception)
         {
             ConsoleTools.Failure($"{exception.GetType()}: {exception.Message}");
+        }
+
+        public async Task Run(string endpoint)
+        {
+            var response = await _httpClient.GetAsync(endpoint);
+
+            await LogResponse(response);
         }
     }
 }
