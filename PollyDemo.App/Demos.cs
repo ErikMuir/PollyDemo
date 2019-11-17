@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,6 +74,26 @@ namespace PollyDemo.App
             var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
+
+            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+        }
+
+        public async void Delegates()
+        {
+            const string endpoint = "/auth";
+
+            var expiredToken = new AuthenticationHeaderValue("Bearer", "expired-token");
+            var freshToken = new AuthenticationHeaderValue("Bearer", "fresh-token");
+
+            _httpClient.DefaultRequestHeaders.Authorization = expiredToken;
+
+            var policy = Policy
+                .HandleResult<HttpResponseMessage>(r => r.StatusCode == HttpStatusCode.Unauthorized)
+                .RetryAsync(onRetry: (httpResponseMessage, i) =>
+                {
+                    Console.WriteLine("Refreshing auth token ...");
+                    _httpClient.DefaultRequestHeaders.Authorization = freshToken;
+                });
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
         }
