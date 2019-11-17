@@ -24,7 +24,7 @@ namespace PollyDemo.App
 
         private static async Task LogResponse(HttpResponseMessage response)
         {
-            var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync()) ?? "Unknown";
+            var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
             _console.WriteLine($"Tomorrow's forecast: {content}");
         }
 
