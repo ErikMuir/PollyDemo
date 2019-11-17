@@ -18,6 +18,7 @@ namespace PollyDemo.App
         {
             _httpClient = client;
             _httpClient.GetAsync("/setup").Wait();
+            Console.Clear();
         }
 
         public async Task Run()
