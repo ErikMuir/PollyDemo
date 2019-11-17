@@ -19,6 +19,7 @@ namespace PollyDemo.App
 
     public static class DemoLogger
     {
+        private static readonly FluentConsole _console = new FluentConsole();
         private static readonly LogOptions _noEOL = new LogOptions
         {
             IsEndOfLine = false,
@@ -28,15 +29,16 @@ namespace PollyDemo.App
 
         public static void LogRequest(ActionType actionType, HttpMethod method, string endpoint)
         {
-            ConsoleTools.LineFeed();
-            ConsoleTools.Info($"{actionType} request: ", _noEOL);
-            ConsoleTools.Warning($"{method.ToString().ToUpper()} http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL);
-            ConsoleTools.LineFeed();
+            _console
+                .LineFeed()
+                .Info($"{actionType} request: ", _noEOL)
+                .Warning($"{method.ToString().ToUpper()} http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL)
+                .LineFeed();
         }
 
         public static void LogResponse(ActionType actionType, HttpStatusCode statusCode, string content)
         {
-            ConsoleTools.Info($"{actionType} response: ", _noEOL);
+            _console.Info($"{actionType} response: ", _noEOL);
             var isSuccessStatusCode = (int)statusCode >= 200 && (int)statusCode < 300;
             var logOptions = new LogOptions
             {
@@ -45,9 +47,9 @@ namespace PollyDemo.App
                     : ConsoleColor.Red,
                 IsEndOfLine = false,
             };
-            ConsoleTools.Info($"{(int)statusCode} {statusCode}", logOptions);
-            if (!string.IsNullOrWhiteSpace(content)) ConsoleTools.Info($" : {content}", logOptions);
-            ConsoleTools.LineFeed();
+            _console.Info($"{(int)statusCode} {statusCode}", logOptions);
+            if (!string.IsNullOrWhiteSpace(content)) _console.Info($" : {content}", logOptions);
+            _console.LineFeed();
         }
 
         public static void LogException(Exception exception)

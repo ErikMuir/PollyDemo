@@ -15,7 +15,6 @@ namespace PollyDemo.Api.Controllers
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
 
-
         [HttpGet("/")]
         public async Task<IActionResult> Get()
         {
@@ -74,6 +73,7 @@ namespace PollyDemo.Api.Controllers
         private static int _failCount = 0;
         private static int _simulateDataProcessing = 250;
         private static int _simulateHangingService = 5000;
+        private static readonly FluentConsole _console = new FluentConsole();
 
         private string GetForecast() => _summaries[new Random().Next(_summaries.Length)];
         private async new Task<IActionResult> Ok() => await SendResponse(HttpStatusCode.OK, GetForecast());
@@ -93,15 +93,16 @@ namespace PollyDemo.Api.Controllers
 
         private static void LogRequest(string endpoint)
         {
-            ConsoleTools.LineFeed();
-            ConsoleTools.Info("Received request: ", _noEOL);
-            ConsoleTools.Warning($"GET http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL);
-            ConsoleTools.LineFeed();
+            _console
+                .LineFeed()
+                .Info("Received request: ", _noEOL)
+                .Warning($"GET http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL)
+                .LineFeed();
         }
 
         private static void LogResponse(HttpStatusCode statusCode, string content)
         {
-            ConsoleTools.Info("Sending response: ", _noEOL);
+            _console.Info("Sending response: ", _noEOL);
             var isSuccessStatusCode = (int)statusCode >= 200 && (int)statusCode < 300;
             var logOptions = new LogOptions
             {
@@ -110,9 +111,9 @@ namespace PollyDemo.Api.Controllers
                     : ConsoleColor.DarkRed,
                 IsEndOfLine = false,
             };
-            ConsoleTools.Info($"{(int)statusCode} {statusCode}", logOptions);
-            if (!string.IsNullOrWhiteSpace(content)) ConsoleTools.Info($" : {content}", logOptions);
-            ConsoleTools.LineFeed();
+            _console.Info($"{(int)statusCode} {statusCode}", logOptions);
+            if (!string.IsNullOrWhiteSpace(content)) _console.Info($" : {content}", logOptions);
+            _console.LineFeed();
         }
 
         #endregion

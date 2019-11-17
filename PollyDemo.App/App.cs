@@ -13,6 +13,7 @@ namespace PollyDemo.App
     public class App
     {
         private readonly HttpClient _httpClient;
+        private static readonly FluentConsole _console = new FluentConsole();
 
         public App(HttpClient client)
         {
@@ -24,12 +25,12 @@ namespace PollyDemo.App
         private static async Task LogResponse(HttpResponseMessage response)
         {
             var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync()) ?? "Unknown";
-            Console.WriteLine($"Tomorrow's forecast: {content}");
+            _console.WriteLine($"Tomorrow's forecast: {content}");
         }
 
         private static void LogException(Exception exception)
         {
-            ConsoleTools.Failure($"{exception.GetType()}: {exception.Message}");
+            _console.Failure($"{exception.GetType()}: {exception.Message}");
         }
 
         public async Task Run(string endpoint)
