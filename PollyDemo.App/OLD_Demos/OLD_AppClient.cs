@@ -62,42 +62,35 @@ namespace PollyDemo.App
                     Shutdown();
                     Environment.Exit(0);
                 }
-                await RunDemo(response);
+                await GetDemo(response).Run();
                 Continue();
             }
         }
 
-        private async Task RunDemo(char menuOption)
+        private IDemo GetDemo(char menuOption)
         {
             switch (menuOption)
             {
                 case '1':
-                    await _withoutPollyDemo.Run();
-                    break;
+                    return _withoutPollyDemo;
                 case '2':
-                    await _fallbackPolicyDemo.Run();
-                    break;
+                    return _fallbackPolicyDemo;
                 case '3':
-                    await _retryPolicyDemo.Run();
-                    break;
+                    return _retryPolicyDemo;
                 case '4':
-                    await _waitAndRetryPolicyDemo.Run();
-                    break;
+                    return _waitAndRetryPolicyDemo;
                 case '5':
-                    await _policyDelegatesDemo.Run();
-                    break;
+                    return _policyDelegatesDemo;
                 case '6':
-                    await _timeoutPolicyDemo.Run();
-                    break;
+                    return _timeoutPolicyDemo;
                 case '7':
-                    await _policyWrappingDemo.Run();
-                    break;
+                    return _policyWrappingDemo;
                 case '8':
-                    await _circuitBreakerFailsDemo.Run();
-                    break;
+                    return _circuitBreakerFailsDemo;
                 case '9':
-                    await _circuitBreakerRecoversDemo.Run();
-                    break;
+                    return _circuitBreakerRecoversDemo;
+                default:
+                    throw new NotImplementedException();
             }
         }
 
