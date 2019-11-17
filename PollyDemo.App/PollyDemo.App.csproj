@@ -12,7 +12,4 @@
     <PackageReference Include="Polly.Extensions.Http" Version="3.0.0"/>
     <PackageReference Include="MuirDev.ConsoleTools" Version="0.1.0"/>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\PollyDemo.Common\PollyDemo.Common.csproj"/>
-  </ItemGroup>
 </Project>
