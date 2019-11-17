@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Polly;
 using Polly.CircuitBreaker;
-using PollyDemo.Common;
 
 namespace PollyDemo.App
 {

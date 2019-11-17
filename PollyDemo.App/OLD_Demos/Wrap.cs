@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Polly;
 using Polly.Timeout;
-using PollyDemo.Common;
 
 namespace PollyDemo.App
 {
