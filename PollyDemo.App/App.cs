@@ -14,6 +14,7 @@ namespace PollyDemo.App
     {
         private readonly HttpClient _httpClient;
         private static readonly FluentConsole _console = new FluentConsole();
+        private static readonly LogOptions _noEOL = new LogOptions { IsEndOfLine = false };
 
         public App(HttpClient client)
         {
@@ -22,10 +23,24 @@ namespace PollyDemo.App
             Console.Clear();
         }
 
+        private static void LogRequest(string endpoint)
+        {
+            _console
+                .LineFeed()
+                .Info("Sending request: ", _noEOL)
+                .Warning($"GET http://localhost:5000/api/WeatherForecast{endpoint}");
+        }
+
         private static async Task LogResponse(HttpResponseMessage response)
         {
+            var isOk = response.IsSuccessStatusCode;
+            var options = new LogOptions { ForegroundColor = isOk ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed };
             var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
-            _console.WriteLine($"Tomorrow's forecast: {content}");
+            _console
+                .Info("Received response: ", _noEOL)
+                .Info($"{(int)response.StatusCode} {response.StatusCode}", options)
+                .LineFeed()
+                .Info($"Tomorrow's forecast: {content}", new LogOptions { ForegroundColor = ConsoleColor.DarkCyan });
         }
 
         private static void LogException(Exception exception)
@@ -35,6 +50,8 @@ namespace PollyDemo.App
 
         public async Task Run(string endpoint)
         {
+            LogRequest(endpoint);
+
             var response = await _httpClient.GetAsync(endpoint);
 
             await LogResponse(response);

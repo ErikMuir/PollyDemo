@@ -18,7 +18,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/")]
         public async Task<IActionResult> Get()
         {
-            LogRequest("/");
+            LogRequest();
             await Task.Delay(_simulateDataProcessing);
             return await Ok();
         }
@@ -26,7 +26,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/fail/{*count}")]
         public async Task<IActionResult> Fail(int count)
         {
-            LogRequest("/fail");
+            LogRequest();
             await Task.Delay(_simulateDataProcessing);
             if (count == 0) return await InternalServerError();
             var isOk = ++_failCount > count;
@@ -36,7 +36,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/bad-request")]
         public async Task<IActionResult> Bad()
         {
-            LogRequest("/bad-request");
+            LogRequest();
             await Task.Delay(_simulateDataProcessing);
             return await BadRequest();
         }
@@ -44,7 +44,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/auth")]
         public async Task<IActionResult> Auth()
         {
-            LogRequest("/auth");
+            LogRequest();
             await Task.Delay(_simulateDataProcessing);
             var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
             return isAuthenticated ? await Ok() : await Unauthorized();
@@ -53,7 +53,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/timeout/{*count}")]
         public async Task<IActionResult> Timeout(int count)
         {
-            LogRequest("/timeout");
+            LogRequest();
             if (++_failCount > count) return await Ok();
             await Task.Delay(_simulateHangingService);
             return await RequestTimeout();
@@ -84,36 +84,28 @@ namespace PollyDemo.Api.Controllers
 
         private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
         {
-            LogResponse(statusCode, content);
+            LogResponse(statusCode);
             await Task.Delay(250);
             return StatusCode((int)statusCode, content);
         }
 
         private static readonly LogOptions _noEOL = new LogOptions { IsEndOfLine = false };
 
-        private static void LogRequest(string endpoint)
+        private void LogRequest()
         {
             _console
                 .LineFeed()
                 .Info("Received request: ", _noEOL)
-                .Warning($"GET http://localhost:5000/api/WeatherForecast{endpoint}", _noEOL)
+                .Warning($"GET http://localhost:5000/api/WeatherForecast{Request.Path}", _noEOL)
                 .LineFeed();
         }
 
-        private static void LogResponse(HttpStatusCode statusCode, string content)
+        private static void LogResponse(HttpStatusCode statusCode)
         {
             _console.Info("Sending response: ", _noEOL);
-            var isSuccessStatusCode = (int)statusCode >= 200 && (int)statusCode < 300;
-            var logOptions = new LogOptions
-            {
-                ForegroundColor = isSuccessStatusCode
-                    ? ConsoleColor.DarkGreen
-                    : ConsoleColor.DarkRed,
-                IsEndOfLine = false,
-            };
-            _console.Info($"{(int)statusCode} {statusCode}", logOptions);
-            if (!string.IsNullOrWhiteSpace(content)) _console.Info($" : {content}", logOptions);
-            _console.LineFeed();
+            var isOk = (int)statusCode >= 200 && (int)statusCode < 300;
+            var options = new LogOptions { ForegroundColor = isOk ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed };
+            _console.Info($"{(int)statusCode} {statusCode}", options);
         }
 
         #endregion
