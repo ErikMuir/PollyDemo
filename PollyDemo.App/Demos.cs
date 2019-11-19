@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Extensions.Http;
@@ -89,9 +90,10 @@ namespace PollyDemo.App
 
             var policy = Policy
                 .HandleResult<HttpResponseMessage>(r => r.StatusCode == HttpStatusCode.Unauthorized)
-                .RetryAsync(onRetry: (httpResponseMessage, i) =>
+                .RetryAsync(onRetry: (response, retryAttempt) =>
                 {
-                    Console.WriteLine("Refreshing auth token ...");
+                    Console.WriteLine("Refreshing auth token...");
+                    Task.Delay(1000).Wait(); // simulate refreshing auth token
                     _httpClient.DefaultRequestHeaders.Authorization = freshToken;
                 });
 
