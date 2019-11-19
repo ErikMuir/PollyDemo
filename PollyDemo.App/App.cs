@@ -35,7 +35,7 @@ namespace PollyDemo.App
         {
             var isOk = response.IsSuccessStatusCode;
             var options = new LogOptions { ForegroundColor = isOk ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed };
-            var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync());
+            var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync()) ?? "null";
             _console
                 .Info("Received response: ", _noEOL)
                 .Info($"{(int)response.StatusCode} {response.StatusCode}", options)
