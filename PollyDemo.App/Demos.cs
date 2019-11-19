@@ -90,7 +90,7 @@ namespace PollyDemo.App
 
             var policy = Policy
                 .HandleResult<HttpResponseMessage>(r => r.StatusCode == HttpStatusCode.Unauthorized)
-                .RetryAsync(onRetry: (response, retryAttempt) =>
+                .RetryAsync(onRetry: (response, retryCount) =>
                 {
                     Console.WriteLine("Refreshing auth token...");
                     Task.Delay(1000).Wait(); // simulate refreshing auth token
