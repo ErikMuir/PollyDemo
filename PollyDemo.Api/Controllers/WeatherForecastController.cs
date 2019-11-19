@@ -28,9 +28,9 @@ namespace PollyDemo.Api.Controllers
         {
             LogRequest();
             await Task.Delay(_simulateDataProcessing);
-            if (count == 0) return await InternalServerError();
-            var isOk = ++_failCount > count;
-            return isOk ? await Ok() : await InternalServerError();
+            return count > 0 && ++_failCount > count
+                ? await Ok()
+                : await InternalServerError();
         }
 
         [HttpGet("/bad-request")]
@@ -46,15 +46,17 @@ namespace PollyDemo.Api.Controllers
         {
             LogRequest();
             await Task.Delay(_simulateDataProcessing);
-            var isAuthenticated = Request.Headers["Authorization"] == "Bearer fresh-token";
-            return isAuthenticated ? await Ok() : await Unauthorized();
+            return Request.Headers["Authorization"] == "Bearer fresh-token"
+                ? await Ok()
+                : await Unauthorized();
         }
 
         [HttpGet("/timeout/{*count}")]
         public async Task<IActionResult> Timeout(int count)
         {
             LogRequest();
-            if (++_failCount > count) return await Ok();
+            await Task.Delay(_simulateDataProcessing);
+            if (count > 0 && ++_failCount > count) return await Ok();
             await Task.Delay(_simulateHangingService);
             return await RequestTimeout();
         }
