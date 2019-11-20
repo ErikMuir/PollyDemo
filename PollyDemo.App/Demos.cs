@@ -35,44 +35,48 @@ namespace PollyDemo.App
             }
         }
 
-        public async void BasicRetry()
+        public async void Retry()
         {
             const string endpoint = "/fail/1";
 
+            // handle failures
             var policy = Policy
                 .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                 .RetryAsync();
 
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-        }
+            // don't handle bad requests
+            policy = Policy
+                .HandleResult<HttpResponseMessage>(r => (int)r.StatusCode >= 500)
+                .RetryAsync();
 
-        public async void TransientErrorRetry()
-        {
-            const string endpoint = "/fail/1";
+            // handle request timeouts
+            policy = Policy
+                .HandleResult<HttpResponseMessage>(r => (int)r.StatusCode >= 500 || r.StatusCode == HttpStatusCode.RequestTimeout)
+                .RetryAsync();
 
-            var policy = HttpPolicyExtensions
+            // handle network failures
+            policy = Policy
+                .HandleResult<HttpResponseMessage>(r => (int)r.StatusCode >= 500 || r.StatusCode == HttpStatusCode.RequestTimeout)
+                .Or<HttpRequestException>()
+                .RetryAsync();
+
+            // handle all/only transient http errors
+            policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .RetryAsync();
 
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-        }
+            // problems may last more than an instant
+            policy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .RetryAsync(3);
 
-        public async void WaitAndRetryLinear()
-        {
-            const string endpoint = "/fail/4";
-
-            var policy = HttpPolicyExtensions
+            // leave some space to give it a chance to recover
+            policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromMilliseconds(500));
 
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-        }
-
-        public async void WaitAndRetryLogarithmic()
-        {
-            const string endpoint = "/fail/4";
-
-            var policy = HttpPolicyExtensions
+            // progressively back off
+            policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
 
