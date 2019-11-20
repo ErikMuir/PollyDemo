@@ -91,23 +91,25 @@ namespace PollyDemo.Api.Controllers
             return StatusCode((int)statusCode, content);
         }
 
-        private static readonly LogOptions _noEOL = new LogOptions { IsEndOfLine = false };
+        private static readonly LogOptions _noEOL = new LogOptions(false);
+        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
+        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
+        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
 
         private void LogRequest()
         {
             _console
                 .LineFeed()
                 .Info("Received request: ", _noEOL)
-                .Warning($"GET http://localhost:5000/api/WeatherForecast{Request.Path}", _noEOL)
-                .LineFeed();
+                .Info($"GET http://localhost:5000/api/WeatherForecast{Request.Path}", _endpoint);
         }
 
         private static void LogResponse(HttpStatusCode statusCode)
         {
-            _console.Info("Sending response: ", _noEOL);
-            var isOk = (int)statusCode >= 200 && (int)statusCode < 300;
-            var options = new LogOptions { ForegroundColor = isOk ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed };
-            _console.Info($"{(int)statusCode} {statusCode}", options);
+            var options = (int)statusCode >= 200 && (int)statusCode < 300 ? _success : _failure;
+            _console
+                .Info("Sending response: ", _noEOL)
+                .Info($"{(int)statusCode} {statusCode}", options);
         }
 
         #endregion

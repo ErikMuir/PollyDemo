@@ -14,13 +14,17 @@ namespace PollyDemo.App
     {
         private readonly HttpClient _httpClient;
         private static readonly FluentConsole _console = new FluentConsole();
-        private static readonly LogOptions _noEOL = new LogOptions { IsEndOfLine = false };
+        private static readonly LogOptions _noEOL = new LogOptions(false);
+        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
+        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
+        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
+        private static readonly LogOptions _forecast = new LogOptions(ConsoleColor.DarkCyan);
 
         public App(HttpClient client)
         {
             _httpClient = client;
             _httpClient.GetAsync("/setup").Wait();
-            Console.Clear();
+            _console.Clear();
         }
 
         private static void LogRequest(string endpoint)
@@ -28,19 +32,18 @@ namespace PollyDemo.App
             _console
                 .LineFeed()
                 .Info("Sending request: ", _noEOL)
-                .Warning($"GET http://localhost:5000/api/WeatherForecast{endpoint}");
+                .Info($"GET http://localhost:5000/api/WeatherForecast{endpoint}", _endpoint);
         }
 
-        private static async Task LogResponse(HttpResponseMessage response)
+        private static void LogResponse(HttpResponseMessage response)
         {
-            var isOk = response.IsSuccessStatusCode;
-            var options = new LogOptions { ForegroundColor = isOk ? ConsoleColor.DarkGreen : ConsoleColor.DarkRed };
-            var content = JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync()) ?? "null";
+            var options = response.IsSuccessStatusCode ? _success : _failure;
+            var content = JsonConvert.DeserializeObject(response.Content.ReadAsStringAsync().Result) ?? "null";
             _console
                 .Info("Received response: ", _noEOL)
                 .Info($"{(int)response.StatusCode} {response.StatusCode}", options)
                 .LineFeed()
-                .Info($"Tomorrow's forecast: {content}", new LogOptions { ForegroundColor = ConsoleColor.DarkCyan });
+                .Info($"Tomorrow's forecast: {content}", _forecast);
         }
 
         private static void LogException(Exception exception)
@@ -48,13 +51,14 @@ namespace PollyDemo.App
             _console.Failure($"{exception.GetType()}: {exception.Message}");
         }
 
+
         public async Task Run(string endpoint)
         {
             LogRequest(endpoint);
 
             var response = await _httpClient.GetAsync(endpoint);
 
-            await LogResponse(response);
+            LogResponse(response);
         }
     }
 }
