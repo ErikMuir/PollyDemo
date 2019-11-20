@@ -9,7 +9,7 @@ namespace PollyDemo.App
     {
         static async Task Main(string[] args)
         {
-            var endpoint = GetEndpoint(args);
+            var endpoint = ComposeEndpoint(args);
 
             var services = new ServiceCollection();
 
@@ -26,7 +26,7 @@ namespace PollyDemo.App
             await app.Run(endpoint);
         }
 
-        private static string GetEndpoint(string[] args)
+        private static string ComposeEndpoint(string[] args)
         {
             var endpoint = "/";
 
