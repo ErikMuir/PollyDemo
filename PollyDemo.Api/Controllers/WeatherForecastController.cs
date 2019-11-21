@@ -20,7 +20,7 @@ namespace PollyDemo.Api.Controllers
         {
             LogRequest();
             await Task.Delay(_simulateDataProcessing);
-            return await Ok();
+            return await SendResponse(HttpStatusCode.OK, GetForecast());
         }
 
         [HttpGet("/fail/{*count}")]
@@ -29,8 +29,8 @@ namespace PollyDemo.Api.Controllers
             LogRequest();
             await Task.Delay(_simulateDataProcessing);
             return count > 0 && ++_failCount > count
-                ? await Ok()
-                : await InternalServerError();
+                ? await SendResponse(HttpStatusCode.OK, GetForecast())
+                : await SendResponse(HttpStatusCode.InternalServerError);
         }
 
         [HttpGet("/bad-request")]
@@ -38,7 +38,7 @@ namespace PollyDemo.Api.Controllers
         {
             LogRequest();
             await Task.Delay(_simulateDataProcessing);
-            return await BadRequest();
+            return await SendResponse(HttpStatusCode.BadRequest);
         }
 
         [HttpGet("/auth")]
@@ -47,8 +47,8 @@ namespace PollyDemo.Api.Controllers
             LogRequest();
             await Task.Delay(_simulateDataProcessing);
             return Request.Headers["Authorization"] == "Bearer fresh-token"
-                ? await Ok()
-                : await Unauthorized();
+                ? await SendResponse(HttpStatusCode.OK, GetForecast())
+                : await SendResponse(HttpStatusCode.Unauthorized);
         }
 
         [HttpGet("/timeout/{*count}")]
@@ -56,9 +56,10 @@ namespace PollyDemo.Api.Controllers
         {
             LogRequest();
             await Task.Delay(_simulateDataProcessing);
-            if (count > 0 && ++_failCount > count) return await Ok();
+            if (count > 0 && ++_failCount > count)
+                return await SendResponse(HttpStatusCode.OK, GetForecast());
             await Task.Delay(_simulateHangingService);
-            return await RequestTimeout();
+            return await SendResponse(HttpStatusCode.RequestTimeout);
         }
 
         [HttpGet("/setup")]
@@ -76,13 +77,12 @@ namespace PollyDemo.Api.Controllers
         private static int _simulateDataProcessing = 250;
         private static int _simulateHangingService = 5000;
         private static readonly FluentConsole _console = new FluentConsole();
+        private static readonly LogOptions _noEOL = new LogOptions(false);
+        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
+        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
+        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
 
         private string GetForecast() => _summaries[new Random().Next(_summaries.Length)];
-        private async new Task<IActionResult> Ok() => await SendResponse(HttpStatusCode.OK, GetForecast());
-        private async new Task<IActionResult> BadRequest() => await SendResponse(HttpStatusCode.BadRequest);
-        private async Task<IActionResult> InternalServerError() => await SendResponse(HttpStatusCode.InternalServerError);
-        private async Task<IActionResult> RequestTimeout() => await SendResponse(HttpStatusCode.RequestTimeout);
-        private async new Task<IActionResult> Unauthorized() => await SendResponse(HttpStatusCode.Unauthorized);
 
         private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
         {
@@ -90,11 +90,6 @@ namespace PollyDemo.Api.Controllers
             await Task.Delay(250);
             return StatusCode((int)statusCode, content);
         }
-
-        private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
-        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
-        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
 
         private void LogRequest()
         {
