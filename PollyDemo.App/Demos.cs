@@ -126,14 +126,14 @@ namespace PollyDemo.App
 
         public async Task Timeout()
         {
-            var endpoint = "/timeout/1";
+            var endpoint = "/timeout";
 
             var policy = Policy.TimeoutAsync(3);
 
             try
             {
-                var response = await policy.ExecuteAsync(async token =>
-                    await _httpClient.GetAsync(endpoint, token),
+                var response = await policy.ExecuteAsync(async ct =>
+                    await _httpClient.GetAsync(endpoint, ct),
                     CancellationToken.None);
 
                 LogResponse(response);
@@ -142,21 +142,28 @@ namespace PollyDemo.App
             {
                 LogException(e);
             }
+
+            // var policy = Policy.TimeoutAsync(3, onTimeoutAsync: async (context, timespan, task) =>
+            // {
+            //     _console.Warning($"{context.PolicyKey}: execution timed out after {timespan.TotalSeconds} seconds.");
+            //     await Task.CompletedTask;
+            // });
         }
 
         public async void Fallback()
         {
-            var endpoint = "/fail/3";
+            var endpoint = "/fail";
 
             var fallbackValue = "Same as today";
             var fallbackJson = JsonConvert.SerializeObject(fallbackValue);
+            var fallbackResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(fallbackJson)
+            };
 
             var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .FallbackAsync(new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new StringContent(fallbackJson),
-                });
+                .FallbackAsync(fallbackResponse);
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
         }
