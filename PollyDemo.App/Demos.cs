@@ -2,8 +2,11 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using MuirDev.ConsoleTools;
+using Newtonsoft.Json;
 using Polly;
 using Polly.Extensions.Http;
 using Polly.Timeout;
@@ -83,6 +86,23 @@ namespace PollyDemo.App
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
         }
 
+        public async void HttpRequestException()
+        {
+            const string endpoint = "/";
+
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:4444/api/WeatherForecast") };
+
+            var policy = Policy
+                .Handle<HttpRequestException>()
+                .RetryAsync(onRetry: (ex, attempt) =>
+                {
+                    LogException(ex);
+                    httpClient = _httpClient;
+                });
+
+            var response = await policy.ExecuteAsync(() => httpClient.GetAsync(endpoint));
+        }
+
         public async void Delegates()
         {
             const string endpoint = "/auth";
@@ -99,6 +119,43 @@ namespace PollyDemo.App
                     Console.WriteLine("Refreshing auth token...");
                     Task.Delay(1000).Wait(); // simulate refreshing auth token
                     _httpClient.DefaultRequestHeaders.Authorization = freshToken;
+                });
+
+            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+        }
+
+        public async Task Timeout()
+        {
+            var endpoint = "/timeout/1";
+
+            var policy = Policy.TimeoutAsync(3);
+
+            try
+            {
+                var response = await policy.ExecuteAsync(async token =>
+                    await _httpClient.GetAsync(endpoint, token),
+                    CancellationToken.None);
+
+                LogResponse(response);
+            }
+            catch (TimeoutRejectedException e)
+            {
+                LogException(e);
+            }
+        }
+
+        public async void Fallback()
+        {
+            var endpoint = "/fail/3";
+
+            var fallbackValue = "Same as today";
+            var fallbackJson = JsonConvert.SerializeObject(fallbackValue);
+
+            var policy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .FallbackAsync(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(fallbackJson),
                 });
 
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
@@ -125,5 +182,8 @@ namespace PollyDemo.App
                 .AddPolicyHandler(retryPolicy)
                 .AddPolicyHandler(timeoutPolicy);
         }
+
+        private static void LogException(Exception exception) { }
+        private static void LogResponse(HttpResponseMessage response) { }
     }
 }
