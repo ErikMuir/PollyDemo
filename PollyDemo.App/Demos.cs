@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MuirDev.ConsoleTools;
 using Newtonsoft.Json;
 using Polly;
+using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 
@@ -16,6 +17,16 @@ namespace PollyDemo.App
     public class Demos
     {
         private readonly HttpClient _httpClient;
+        private static readonly FluentConsole _console = new FluentConsole();
+        private static readonly LogOptions _noEOL = new LogOptions(false);
+        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
+        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
+        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
+        private static readonly LogOptions _forecast = new LogOptions(ConsoleColor.DarkCyan);
+        private static int _exceptionCount;
+        private static void LogException(Exception exception) { }
+        private static void LogResponse(HttpResponseMessage response) { }
+        private static void HandleException() { }
 
         public Demos(HttpClient client)
         {
@@ -179,6 +190,7 @@ namespace PollyDemo.App
 
             var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);
 
+
             services
                 .AddHttpClient<App>(x =>
                 {
@@ -188,9 +200,54 @@ namespace PollyDemo.App
                 })
                 .AddPolicyHandler(retryPolicy)
                 .AddPolicyHandler(timeoutPolicy);
+
+            // var wrappedPolicy = retryPolicy.WrapAsync(timeoutPolicy).WrapAsync(retryPolicy);
+
+            // services
+            //     .AddHttpClient<App>(x =>
+            //     {
+            //         x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
+            //         x.DefaultRequestHeaders.Accept.Clear();
+            //         x.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            //     })
+            //     .AddPolicyHandler(wrappedPolicy);
         }
 
-        private static void LogException(Exception exception) { }
-        private static void LogResponse(HttpResponseMessage response) { }
+        public async Task CircuitBreaker()
+        {
+            var endpoint = "fail";
+
+            var retry = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .RetryForeverAsync();
+
+            var breaker = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .CircuitBreakerAsync(
+                    handledEventsAllowedBeforeBreaking: 3,
+                    durationOfBreak: TimeSpan.FromSeconds(10),
+                    onBreak: (exception, timespan) => _console.Failure("The circuit is now open and is not allowing calls for the next 10 seconds.", _noEOL),
+                    onReset: () => _console.Success("The circuit is now closed and all requests will be allowed."),
+                    onHalfOpen: () => _console.LineFeed().Warning("The circuit is now half-open and will allow one request."));
+
+            var policy = Policy.WrapAsync(retry, breaker);
+
+            while (true)
+            {
+                try
+                {
+                    var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+
+                    LogResponse(response);
+
+                    break;
+                }
+                catch (BrokenCircuitException)
+                {
+                    endpoint = "/";
+                    HandleException();
+                }
+            }
+        }
     }
 }
