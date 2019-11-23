@@ -2,10 +2,13 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Polly;
+using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
+using Polly.Timeout;
 using MuirDev.ConsoleTools;
 
 namespace PollyDemo.App
@@ -19,12 +22,14 @@ namespace PollyDemo.App
         private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
         private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
         private static readonly LogOptions _forecast = new LogOptions(ConsoleColor.DarkCyan);
+        private static int _exceptionCount;
 
         public App(HttpClient client)
         {
             _httpClient = client;
             _httpClient.GetAsync("/setup").Wait();
             _console.Clear();
+            _exceptionCount = 0;
         }
 
         private static void LogRequest(string endpoint)
@@ -51,6 +56,10 @@ namespace PollyDemo.App
             _console.Failure($"{exception.GetType()}: {exception.Message}");
         }
 
+        private static void HandleException()
+        {
+            if (++_exceptionCount % 5000 == 0) _console.Failure(".", _noEOL);
+        }
 
         public async Task Run(string endpoint)
         {
