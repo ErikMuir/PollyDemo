@@ -153,12 +153,6 @@ namespace PollyDemo.App
             {
                 LogException(e);
             }
-
-            // var policy = Policy.TimeoutAsync(3, onTimeoutAsync: async (context, timespan, task) =>
-            // {
-            //     _console.Warning($"{context.PolicyKey}: execution timed out after {timespan.TotalSeconds} seconds.");
-            //     await Task.CompletedTask;
-            // });
         }
 
         public async void Fallback()
@@ -201,7 +195,7 @@ namespace PollyDemo.App
                 .AddPolicyHandler(retryPolicy)
                 .AddPolicyHandler(timeoutPolicy);
 
-            // var wrappedPolicy = retryPolicy.WrapAsync(timeoutPolicy).WrapAsync(retryPolicy);
+            // var wrappedPolicy = retryPolicy.WrapAsync(timeoutPolicy);
 
             // services
             //     .AddHttpClient<App>(x =>

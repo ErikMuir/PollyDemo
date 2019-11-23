@@ -17,11 +17,6 @@ namespace PollyDemo.App
     {
         private readonly HttpClient _httpClient;
         private static readonly FluentConsole _console = new FluentConsole();
-        private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
-        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
-        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
-        private static readonly LogOptions _forecast = new LogOptions(ConsoleColor.DarkCyan);
         private static int _exceptionCount;
 
         public App(HttpClient client)
@@ -31,6 +26,14 @@ namespace PollyDemo.App
             _console.Clear();
             _exceptionCount = 0;
         }
+
+        #region [Demo Orchestration]
+
+        private static readonly LogOptions _noEOL = new LogOptions(false);
+        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
+        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
+        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
+        private static readonly LogOptions _forecast = new LogOptions(ConsoleColor.DarkCyan);
 
         private static void LogRequest(string endpoint)
         {
@@ -60,6 +63,8 @@ namespace PollyDemo.App
         {
             if (++_exceptionCount % 5000 == 0) _console.Failure(".", _noEOL);
         }
+
+        #endregion
 
         public async Task Run(string endpoint)
         {
