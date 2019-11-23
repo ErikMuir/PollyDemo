@@ -16,13 +16,6 @@ namespace PollyDemo.App
 {
     public class Demos
     {
-        private readonly HttpClient _httpClient;
-        private static readonly FluentConsole _console = new FluentConsole();
-        private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static void LogException(Exception exception) { }
-        private static void LogResponse(HttpResponseMessage response) { }
-        private static void HandleException() { }
-
         public async void RetryWithoutPolly()
         {
             const string endpoint = "/fail/1";
@@ -244,5 +237,16 @@ namespace PollyDemo.App
                 }
             }
         }
+
+        #region [Demo Orchestration]
+
+        private readonly HttpClient _httpClient;
+        private static readonly FluentConsole _console = new FluentConsole();
+        private static readonly LogOptions _noEOL = new LogOptions(false);
+        private static void LogException(Exception exception) { }
+        private static void LogResponse(HttpResponseMessage response) { }
+        private static void HandleException() { }
+
+        #endregion
     }
 }
