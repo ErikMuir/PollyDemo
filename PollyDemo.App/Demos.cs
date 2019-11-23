@@ -19,19 +19,9 @@ namespace PollyDemo.App
         private readonly HttpClient _httpClient;
         private static readonly FluentConsole _console = new FluentConsole();
         private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
-        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
-        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
-        private static readonly LogOptions _forecast = new LogOptions(ConsoleColor.DarkCyan);
-        private static int _exceptionCount;
         private static void LogException(Exception exception) { }
         private static void LogResponse(HttpResponseMessage response) { }
         private static void HandleException() { }
-
-        public Demos(HttpClient client)
-        {
-            _httpClient = client;
-        }
 
         public async void RetryWithoutPolly()
         {
@@ -173,10 +163,32 @@ namespace PollyDemo.App
             var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
         }
 
+        public async Task PolicyWrap()
+        {
+            var endpoint = "/timeout/3";
+
+            var retryPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
+                .RetryAsync(3);
+
+            var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(3);
+
+            var wrappedPolicy = Policy.WrapAsync(retryPolicy, timeoutPolicy);
+
+            HttpResponseMessage response = null;
+
+            try
+            {
+                response = await wrappedPolicy.ExecuteAsync(async ct =>
+                    await _httpClient.GetAsync(endpoint, ct),
+                    CancellationToken.None);
+            }
+            catch (TimeoutRejectedException) { }
+        }
+
         public void ConfigureInStartup()
         {
-            var services = new ServiceCollection();
-
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
@@ -184,7 +196,7 @@ namespace PollyDemo.App
 
             var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);
 
-
+            var services = new ServiceCollection();
             services
                 .AddHttpClient<App>(x =>
                 {
@@ -194,17 +206,6 @@ namespace PollyDemo.App
                 })
                 .AddPolicyHandler(retryPolicy)
                 .AddPolicyHandler(timeoutPolicy);
-
-            // var wrappedPolicy = retryPolicy.WrapAsync(timeoutPolicy);
-
-            // services
-            //     .AddHttpClient<App>(x =>
-            //     {
-            //         x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
-            //         x.DefaultRequestHeaders.Accept.Clear();
-            //         x.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            //     })
-            //     .AddPolicyHandler(wrappedPolicy);
         }
 
         public async Task CircuitBreaker()
