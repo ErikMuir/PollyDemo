@@ -16,12 +16,12 @@ namespace PollyDemo.App
 {
     public class Demos
     {
-        public async void RetryWithoutPolly()
+        public async Task<HttpResponseMessage> RetryWithoutPolly(string endpoint = "/fail/1")
         {
-            const string endpoint = "/fail/1";
-
             HttpResponseMessage response = null;
+
             const int retryLimit = 3;
+
             for (int attempt = 0; attempt <= retryLimit; attempt++)
             {
                 response = await _httpClient.GetAsync(endpoint);
@@ -30,12 +30,12 @@ namespace PollyDemo.App
                     break;
                 }
             }
+
+            return response;
         }
 
-        public async void Retry()
+        public async Task<HttpResponseMessage> Retry(string endpoint = "/fail/1")
         {
-            const string endpoint = "/fail/1";
-
             // handle failures
             var policy = Policy
                 .HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -77,13 +77,11 @@ namespace PollyDemo.App
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
 
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+            return await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
         }
 
-        public async void HttpRequestException()
+        public async Task<HttpResponseMessage> HttpRequestException(string endpoint = "/")
         {
-            const string endpoint = "/";
-
             var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:4444/api/WeatherForecast") };
 
             var policy = Policy
@@ -94,13 +92,11 @@ namespace PollyDemo.App
                     httpClient = _httpClient;
                 });
 
-            var response = await policy.ExecuteAsync(() => httpClient.GetAsync(endpoint));
+            return await policy.ExecuteAsync(() => httpClient.GetAsync(endpoint));
         }
 
-        public async void Delegates()
+        public async Task<HttpResponseMessage> Delegates(string endpoint = "/auth")
         {
-            const string endpoint = "/auth";
-
             var expiredToken = new AuthenticationHeaderValue("Bearer", "expired-token");
             var freshToken = new AuthenticationHeaderValue("Bearer", "fresh-token");
 
@@ -115,33 +111,31 @@ namespace PollyDemo.App
                     _httpClient.DefaultRequestHeaders.Authorization = freshToken;
                 });
 
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+            return await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
         }
 
-        public async Task Timeout()
+        public async Task<HttpResponseMessage> Timeout(string endpoint = "/timeout")
         {
-            var endpoint = "/timeout";
-
             var policy = Policy.TimeoutAsync(3);
 
+            HttpResponseMessage response = null;
             try
             {
-                var response = await policy.ExecuteAsync(async ct =>
+                response = await policy.ExecuteAsync(async ct =>
                     await _httpClient.GetAsync(endpoint, ct),
                     CancellationToken.None);
-
-                LogResponse(response);
             }
             catch (TimeoutRejectedException e)
             {
                 LogException(e);
+                return null;
             }
+
+            return response;
         }
 
-        public async void Fallback()
+        public async Task<HttpResponseMessage> Fallback(string endpoint = "/fail")
         {
-            var endpoint = "/fail";
-
             var fallbackValue = "Same as today";
             var fallbackJson = JsonConvert.SerializeObject(fallbackValue);
             var fallbackResponse = new HttpResponseMessage(HttpStatusCode.OK)
@@ -153,13 +147,11 @@ namespace PollyDemo.App
                 .HandleTransientHttpError()
                 .FallbackAsync(fallbackResponse);
 
-            var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+            return await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
         }
 
-        public async Task PolicyWrap()
+        public async Task<HttpResponseMessage> PolicyWrap(string endpoint = "/timeout/3")
         {
-            var endpoint = "/timeout/3";
-
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
@@ -201,10 +193,8 @@ namespace PollyDemo.App
                 .AddPolicyHandler(timeoutPolicy);
         }
 
-        public async Task CircuitBreaker()
+        public async Task<HttpResponseMessage> CircuitBreaker(string endpoint = "/fail")
         {
-            var endpoint = "fail";
-
             var retry = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .RetryForeverAsync();
@@ -220,14 +210,13 @@ namespace PollyDemo.App
 
             var policy = Policy.WrapAsync(retry, breaker);
 
+            HttpResponseMessage response = null;
+
             while (true)
             {
                 try
                 {
-                    var response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-
-                    LogResponse(response);
-
+                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
                     break;
                 }
                 catch (BrokenCircuitException)
@@ -236,17 +225,21 @@ namespace PollyDemo.App
                     HandleException();
                 }
             }
+
+            return response;
         }
 
         #region [Demo Orchestration]
 
         private readonly HttpClient _httpClient;
+        public Demos(HttpClient client)
+        {
+            _httpClient = client;
+        }
         private static readonly FluentConsole _console = new FluentConsole();
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static void LogException(Exception exception) { }
-        private static void LogResponse(HttpResponseMessage response) { }
         private static void HandleException() { }
-
         #endregion
     }
 }
