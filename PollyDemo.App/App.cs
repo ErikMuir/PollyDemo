@@ -70,9 +70,14 @@ namespace PollyDemo.App
         {
             LogRequest(endpoint);
 
-            var response = await _httpClient.GetAsync(endpoint);
+            var response = await GetResponse(endpoint);
 
             LogResponse(response);
+        }
+
+        private async Task<HttpResponseMessage> GetResponse(string endpoint)
+        {
+            return await _httpClient.GetAsync(endpoint);
         }
     }
 }
