@@ -41,6 +41,15 @@ namespace PollyDemo.Api.Controllers
             return await SendResponse(HttpStatusCode.BadRequest);
         }
 
+        [HttpGet("/slow")]
+        public async Task<IActionResult> Slow()
+        {
+            LogRequest();
+            await Task.Delay(_simulateDataProcessing);
+            await Task.Delay(_simulateHangingService);
+            return await SendResponse(HttpStatusCode.OK, GetForecast());
+        }
+
         [HttpGet("/auth")]
         public async Task<IActionResult> Auth()
         {
