@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MuirDev.ConsoleTools;
 using Newtonsoft.Json;
 using Polly;
+using Polly.Bulkhead;
 using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Timeout;
@@ -170,27 +171,8 @@ namespace PollyDemo.App
                     CancellationToken.None);
             }
             catch (TimeoutRejectedException) { }
-        }
 
-        public void ConfigureInStartup()
-        {
-            var retryPolicy = HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
-                .RetryAsync(3);
-
-            var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);
-
-            var services = new ServiceCollection();
-            services
-                .AddHttpClient<App>(x =>
-                {
-                    x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
-                    x.DefaultRequestHeaders.Accept.Clear();
-                    x.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                })
-                .AddPolicyHandler(retryPolicy)
-                .AddPolicyHandler(timeoutPolicy);
+            return response;
         }
 
         public async Task<HttpResponseMessage> CircuitBreaker(string endpoint = "/fail")
@@ -229,9 +211,46 @@ namespace PollyDemo.App
             return response;
         }
 
-        #region [Demo Orchestration]
+        public async Task<HttpResponseMessage> BulkheadIsolation(string endpoint = "/timeout")
+        {
+            HttpResponseMessage response = null;
 
+            try
+            {
+                _console.Info($"Bulkhead available count: {_bulkheadPolicy.BulkheadAvailableCount}");
+                _console.Info($"Queue available count: {_bulkheadPolicy.QueueAvailableCount}");
+                response = await _bulkheadPolicy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+            }
+            catch (BulkheadRejectedException) { }
+
+            return response;
+        }
+
+        public void ConfigureInStartup()
+        {
+            var retryPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
+                .RetryAsync(3);
+
+            var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);
+
+            var services = new ServiceCollection();
+
+            services
+                .AddHttpClient<App>(x =>
+                {
+                    x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
+                    x.DefaultRequestHeaders.Accept.Clear();
+                    x.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                })
+                .AddPolicyHandler(retryPolicy)
+                .AddPolicyHandler(timeoutPolicy);
+        }
+
+        #region [Demo Orchestration]
         private readonly HttpClient _httpClient;
+        private readonly AsyncBulkheadPolicy _bulkheadPolicy = Policy.BulkheadAsync(4, 2);
         public Demos(HttpClient client)
         {
             _httpClient = client;

@@ -10,6 +10,7 @@ using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using MuirDev.ConsoleTools;
+using Polly.Bulkhead;
 
 namespace PollyDemo.App
 {
@@ -27,6 +28,7 @@ namespace PollyDemo.App
 
         #region [Demo Orchestration]
 
+        private static readonly AsyncBulkheadPolicy _bulkheadPolicy = Policy.BulkheadAsync(4, 2);
         private static readonly FluentConsole _console = new FluentConsole();
         private static int _exceptionCount;
         private static readonly LogOptions _noEOL = new LogOptions(false);
@@ -65,7 +67,7 @@ namespace PollyDemo.App
         }
 
         #endregion
-        
+
         public async Task Run(string endpoint)
         {
             LogRequest(endpoint);
