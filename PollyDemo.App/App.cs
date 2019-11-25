@@ -63,7 +63,7 @@ namespace PollyDemo.App
 
         private static void HandleException()
         {
-            if (++_exceptionCount % 5000 == 0) _console.Failure(".", _noEOL);
+            if (++_exceptionCount % 16000 == 0) _console.Failure(".", _noEOL);
         }
 
         #endregion

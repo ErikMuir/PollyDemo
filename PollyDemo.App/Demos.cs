@@ -177,11 +177,7 @@ namespace PollyDemo.App
 
         public async Task<HttpResponseMessage> CircuitBreaker(string endpoint = "/fail")
         {
-            var retry = HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .RetryForeverAsync();
-
-            var breaker = HttpPolicyExtensions
+            var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .CircuitBreakerAsync(
                     handledEventsAllowedBeforeBreaking: 3,
@@ -190,8 +186,6 @@ namespace PollyDemo.App
                     onReset: () => _console.Success("The circuit is now closed and all requests will be allowed."),
                     onHalfOpen: () => _console.LineFeed().Warning("The circuit is now half-open and will allow one request."));
 
-            var policy = Policy.WrapAsync(retry, breaker);
-
             HttpResponseMessage response = null;
 
             while (true)
@@ -199,7 +193,7 @@ namespace PollyDemo.App
                 try
                 {
                     response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
-                    break;
+                    if (response.IsSuccessStatusCode) break;
                 }
                 catch (BrokenCircuitException)
                 {
