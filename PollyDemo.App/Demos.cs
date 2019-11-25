@@ -184,7 +184,41 @@ namespace PollyDemo.App
                     durationOfBreak: TimeSpan.FromSeconds(10),
                     onBreak: (exception, timespan) => _console.Failure("The circuit is now open and is not allowing calls for the next 10 seconds.", _noEOL),
                     onReset: () => _console.Success("The circuit is now closed and all requests will be allowed."),
-                    onHalfOpen: () => _console.LineFeed().Warning("The circuit is now half-open and will allow one request."));
+                    onHalfOpen: () => _console.LineFeed().Warning("The circuit is now half-open and will allow one request.")
+                );
+
+            HttpResponseMessage response = null;
+
+            while (true)
+            {
+                try
+                {
+                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(endpoint));
+                    if (response.IsSuccessStatusCode) break;
+                }
+                catch (BrokenCircuitException)
+                {
+                    endpoint = happyPathEndpoint;
+                    HandleException();
+                }
+            }
+
+            return response;
+        }
+
+        public async Task<HttpResponseMessage> AdvancedCircuitBreaker(string endpoint = "/fail")
+        {
+            var policy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .AdvancedCircuitBreakerAsync(
+                    failureThreshold: 0.5, // Break on >=50% actions result in handled exceptions...
+                    samplingDuration: TimeSpan.FromSeconds(10), // ... over any 10 second period
+                    minimumThroughput: 8, // ... provided at least 8 actions in the 10 second period.
+                    durationOfBreak: TimeSpan.FromSeconds(10), // Break for 10 seconds.
+                    onBreak: (exception, timespan) => _console.Failure("The circuit is now open and is not allowing calls for the next 10 seconds.", _noEOL),
+                    onReset: () => _console.Success("The circuit is now closed and all requests will be allowed."),
+                    onHalfOpen: () => _console.LineFeed().Warning("The circuit is now half-open and will allow one request.")
+                );
 
             HttpResponseMessage response = null;
 
