@@ -87,15 +87,15 @@ namespace PollyDemo.Api.Controllers
         private static int _simulateHangingService = 5000;
         private static readonly FluentConsole _console = new FluentConsole();
         private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
-        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
-        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
+        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow, false);
+        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen, false);
+        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed, false);
 
         private string GetForecast() => _summaries[new Random().Next(_summaries.Length)];
 
         private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
         {
-            LogResponse(statusCode);
+            LogResponse(statusCode, content);
             await Task.Delay(250);
             return StatusCode((int)statusCode, content);
         }
@@ -105,15 +105,17 @@ namespace PollyDemo.Api.Controllers
             _console
                 .LineFeed()
                 .Info("Received request: ", _noEOL)
-                .Info($"GET http://localhost:5000/api/WeatherForecast{Request.Path}", _endpoint);
+                .Info($"GET http://localhost:5000/api/WeatherForecast{Request.Path}", _endpoint)
+                .LineFeed();
         }
 
-        private static void LogResponse(HttpStatusCode statusCode)
+        private static void LogResponse(HttpStatusCode statusCode, string content = null)
         {
             var options = (int)statusCode >= 200 && (int)statusCode < 300 ? _success : _failure;
             _console
                 .Info("Sending response: ", _noEOL)
-                .Info($"{(int)statusCode} {statusCode}", options);
+                .Info($"{(int)statusCode} {statusCode}{(content == null ? "" : $" - {content}")}", options)
+                .LineFeed();
         }
 
         #endregion
