@@ -31,6 +31,7 @@ namespace PollyDemo.App
         private static readonly AsyncBulkheadPolicy _bulkheadPolicy = Policy.BulkheadAsync(4, 2);
         private static readonly FluentConsole _console = new FluentConsole();
         private static int _exceptionCount;
+        private const string happyPathEndpoint = "/";
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
         private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);

@@ -197,7 +197,7 @@ namespace PollyDemo.App
                 }
                 catch (BrokenCircuitException)
                 {
-                    endpoint = "/";
+                    endpoint = happyPathEndpoint;
                     HandleException();
                 }
             }
@@ -249,6 +249,7 @@ namespace PollyDemo.App
         {
             _httpClient = client;
         }
+        private const string happyPathEndpoint = "/";
         private static readonly FluentConsole _console = new FluentConsole();
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static void LogException(Exception exception) { }
