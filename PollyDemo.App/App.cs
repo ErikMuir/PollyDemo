@@ -9,6 +9,8 @@ using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Polly.Bulkhead;
+using MuirDev.ConsoleTools;
+using System.Text.Json;
 
 namespace PollyDemo.App
 {
@@ -20,6 +22,7 @@ namespace PollyDemo.App
         public App(IAppLogger logger, HttpClient client)
         {
             _logger = logger;
+            _console = new FluentConsole();
             _httpClient = client;
             _httpClient.GetAsync("/setup").Wait();
             _logger.Clear();
@@ -29,6 +32,8 @@ namespace PollyDemo.App
         #region
         private const string happyPathEndpoint = "/";
         private static int _exceptionCount;
+        private readonly FluentConsole _console;
+        private static readonly LogOptions _noEOL = new LogOptions(false);
         private static readonly AsyncBulkheadPolicy _bulkheadPolicy = Policy.BulkheadAsync(4, 2);
         #endregion
 

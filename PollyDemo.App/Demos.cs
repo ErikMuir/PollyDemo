@@ -91,25 +91,24 @@ namespace PollyDemo.App
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
         }
 
-        public async Task<HttpResponseMessage> HttpRequestException(string endpoint = "/")
-        {
-            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:4444/api/WeatherForecast") };
+        // public async Task<HttpResponseMessage> HttpRequestException(string endpoint = "/")
+        // {
+        //     var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:4444/api/WeatherForecast") };
 
-            var policy = Policy
-                .Handle<HttpRequestException>()
-                .RetryAsync(onRetry: (ex, attempt) =>
-                {
-                    LogException(ex);
-                    httpClient = _httpClient;
-                });
+        //     var policy = Policy
+        //         .Handle<HttpRequestException>()
+        //         .RetryAsync(onRetry: (ex, attempt) =>
+        //         {
+        //             _logger.LogException(ex);
+        //             httpClient = _httpClient;
+        //         });
 
-            return await policy.ExecuteAsync(() => httpClient.GetAsync(endpoint));
-        }
+        //     return await policy.ExecuteAsync(() => httpClient.GetAsync(endpoint));
+        // }
 
         public async Task<HttpResponseMessage> Delegates(string endpoint = "/auth")
         {
             var expiredToken = new AuthenticationHeaderValue("Bearer", "expired-token");
-            var freshToken = new AuthenticationHeaderValue("Bearer", "fresh-token");
 
             _httpClient.DefaultRequestHeaders.Authorization = expiredToken;
 
@@ -118,7 +117,10 @@ namespace PollyDemo.App
                 .RetryAsync(onRetry: (response, retryCount) =>
                 {
                     Console.WriteLine("Refreshing auth token...");
+
                     Task.Delay(1000).Wait(); // simulate refreshing auth token
+                    var freshToken = new AuthenticationHeaderValue("Bearer", "fresh-token");
+                    
                     _httpClient.DefaultRequestHeaders.Authorization = freshToken;
                 });
 
@@ -138,7 +140,7 @@ namespace PollyDemo.App
             }
             catch (TimeoutRejectedException e)
             {
-                LogException(e);
+                _logger.LogException(e);
                 return null;
             }
 
@@ -209,7 +211,7 @@ namespace PollyDemo.App
                 catch (BrokenCircuitException)
                 {
                     endpoint = happyPathEndpoint;
-                    HandleException(++_exceptionCount);
+                    _logger.HandleException(++_exceptionCount);
                 }
             }
 
@@ -242,7 +244,7 @@ namespace PollyDemo.App
                 catch (BrokenCircuitException)
                 {
                     endpoint = happyPathEndpoint;
-                    HandleException(++_exceptionCount);
+                    _logger.HandleException(++_exceptionCount);
                 }
             }
 
@@ -296,9 +298,8 @@ namespace PollyDemo.App
         private const string happyPathEndpoint = "/";
         private static readonly FluentConsole _console = new FluentConsole();
         private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static void LogException(Exception exception) { }
-        private static void HandleException(int exceptionCount) { }
         private static int _exceptionCount = 0;
+        private static readonly AppLogger _logger;
         #endregion
     }
 }
