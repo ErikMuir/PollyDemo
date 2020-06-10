@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using MuirDev.ConsoleTools;
 
 namespace PollyDemo.Api.Controllers
 {
@@ -10,15 +9,24 @@ namespace PollyDemo.Api.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
+        private static int _failCount = 0;
+        private static int _simulateDataProcessing = 250;
+        private static int _simulateHangingService = 5000;
         private static readonly string[] _summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
+        private readonly IApiLogger _logger;
+
+        public WeatherForecastController(IApiLogger logger)
+        {
+            _logger = logger;
+        }
 
         [HttpGet("/")]
         public async Task<IActionResult> Get()
         {
-            LogRequest();
+            _logger.LogRequest(Request);
             await Task.Delay(_simulateDataProcessing);
             return await SendResponse(HttpStatusCode.OK, GetForecast());
         }
@@ -26,7 +34,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/fail/{*count}")]
         public async Task<IActionResult> Fail(int count)
         {
-            LogRequest();
+            _logger.LogRequest(Request);
             await Task.Delay(_simulateDataProcessing);
             return count > 0 && ++_failCount > count
                 ? await SendResponse(HttpStatusCode.OK, GetForecast())
@@ -36,7 +44,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/bad-request")]
         public async Task<IActionResult> Bad()
         {
-            LogRequest();
+            _logger.LogRequest(Request);
             await Task.Delay(_simulateDataProcessing);
             return await SendResponse(HttpStatusCode.BadRequest);
         }
@@ -44,7 +52,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/slow")]
         public async Task<IActionResult> Slow()
         {
-            LogRequest();
+            _logger.LogRequest(Request);
             await Task.Delay(_simulateDataProcessing);
             await Task.Delay(_simulateHangingService);
             return await SendResponse(HttpStatusCode.OK, GetForecast());
@@ -53,7 +61,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/auth")]
         public async Task<IActionResult> Auth()
         {
-            LogRequest();
+            _logger.LogRequest(Request);
             await Task.Delay(_simulateDataProcessing);
             return Request.Headers["Authorization"] == "Bearer fresh-token"
                 ? await SendResponse(HttpStatusCode.OK, GetForecast())
@@ -63,7 +71,7 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/timeout/{*count}")]
         public async Task<IActionResult> Timeout(int count)
         {
-            LogRequest();
+            _logger.LogRequest(Request);
             await Task.Delay(_simulateDataProcessing);
             if (count > 0 && ++_failCount > count)
                 return await SendResponse(HttpStatusCode.OK, GetForecast());
@@ -74,50 +82,18 @@ namespace PollyDemo.Api.Controllers
         [HttpGet("/setup")]
         public IActionResult Setup()
         {
-            Console.Clear();
+            _logger.Clear();
             _failCount = 0;
             return base.Ok();
         }
-
-
-        #region "Demo Orchestration"
-
-        private static int _failCount = 0;
-        private static int _simulateDataProcessing = 250;
-        private static int _simulateHangingService = 5000;
-        private static readonly FluentConsole _console = new FluentConsole();
-        private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow, false);
-        private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen, false);
-        private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed, false);
 
         private string GetForecast() => _summaries[new Random().Next(_summaries.Length)];
 
         private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
         {
-            LogResponse(statusCode, content);
+            _logger.LogResponse(statusCode, content);
             await Task.Delay(250);
             return StatusCode((int)statusCode, content);
         }
-
-        private void LogRequest()
-        {
-            _console
-                .LineFeed()
-                .Info("Received request: ", _noEOL)
-                .Info($"GET http://localhost:5000/api/WeatherForecast{Request.Path}", _endpoint)
-                .LineFeed();
-        }
-
-        private static void LogResponse(HttpStatusCode statusCode, string content = null)
-        {
-            var options = (int)statusCode >= 200 && (int)statusCode < 300 ? _success : _failure;
-            _console
-                .Info("Sending response: ", _noEOL)
-                .Info($"{(int)statusCode} {statusCode}{(content == null ? "" : $" - {content}")}", options)
-                .LineFeed();
-        }
-
-        #endregion
     }
 }

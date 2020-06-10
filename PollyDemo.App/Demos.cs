@@ -2,11 +2,11 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using MuirDev.ConsoleTools;
-using Newtonsoft.Json;
 using Polly;
 using Polly.Bulkhead;
 using Polly.CircuitBreaker;
@@ -138,7 +138,7 @@ namespace PollyDemo.App
         public async Task<HttpResponseMessage> Fallback(string endpoint = "/fail")
         {
             var fallbackValue = "Same as today";
-            var fallbackJson = JsonConvert.SerializeObject(fallbackValue);
+            var fallbackJson = JsonSerializer.Serialize(fallbackValue);
             var fallbackResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(fallbackJson)
@@ -199,7 +199,7 @@ namespace PollyDemo.App
                 catch (BrokenCircuitException)
                 {
                     endpoint = happyPathEndpoint;
-                    HandleException();
+                    HandleException(++_exceptionCount);
                 }
             }
 
@@ -232,7 +232,7 @@ namespace PollyDemo.App
                 catch (BrokenCircuitException)
                 {
                     endpoint = happyPathEndpoint;
-                    HandleException();
+                    HandleException(++_exceptionCount);
                 }
             }
 
@@ -287,7 +287,8 @@ namespace PollyDemo.App
         private static readonly FluentConsole _console = new FluentConsole();
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static void LogException(Exception exception) { }
-        private static void HandleException() { }
+        private static void HandleException(int exceptionCount) { }
+        private static int _exceptionCount = 0;
         #endregion
     }
 }
