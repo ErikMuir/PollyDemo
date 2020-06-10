@@ -9,19 +9,14 @@ namespace PollyDemo.Api.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
+        const int _simulateDataProcessing = 250;
+        const int _simulateHangingService = 5000;
         private static int _failCount = 0;
-        private static int _simulateDataProcessing = 250;
-        private static int _simulateHangingService = 5000;
+        private static readonly ApiLogger _logger = new ApiLogger();
         private static readonly string[] _summaries = new[]
         {
             "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
         };
-        private readonly IApiLogger _logger;
-
-        public WeatherForecastController(IApiLogger logger)
-        {
-            _logger = logger;
-        }
 
         [HttpGet("/")]
         public async Task<IActionResult> Get()

@@ -16,13 +16,11 @@ namespace PollyDemo.App
 {
     public class App
     {
-        private readonly IAppLogger _logger;
+        private static readonly AppLogger _logger = new AppLogger();
         private readonly HttpClient _httpClient;
 
-        public App(IAppLogger logger, HttpClient client)
+        public App(HttpClient client)
         {
-            _logger = logger;
-            _console = new FluentConsole();
             _httpClient = client;
             _httpClient.GetAsync("/setup").Wait();
             _logger.Clear();
@@ -30,23 +28,22 @@ namespace PollyDemo.App
         }
 
         #region
-        private const string happyPathEndpoint = "/";
+        private const string happyPath = "/";
         private static int _exceptionCount;
-        private readonly FluentConsole _console;
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static readonly AsyncBulkheadPolicy _bulkheadPolicy = Policy.BulkheadAsync(4, 2);
         #endregion
 
-        public async Task Run(string endpoint)
+        public async Task Run(string path)
         {
-            _logger.LogRequest(endpoint);
+            _logger.LogRequest();
 
-            var response = await GetResponse(endpoint);
+            var response = await GetResponse(path);
 
             _logger.LogResponse(response);
         }
 
-        private async Task<HttpResponseMessage> GetResponse(string endpoint)
+        private async Task<HttpResponseMessage> GetResponse(string path)
         {
             return await _httpClient.GetAsync(endpoint);
         }
