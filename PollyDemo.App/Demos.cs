@@ -253,15 +253,20 @@ namespace PollyDemo.App
 
         public async Task<HttpResponseMessage> BulkheadIsolation(string path = "/")
         {
-            HttpResponseMessage response = null;
+            // await DrillBabyDrill();
+            HttpResponseMessage response;
 
             try
             {
-                _logger.Info($"Bulkhead available count: {_bulkheadPolicy.BulkheadAvailableCount}");
-                _logger.Info($"Queue available count: {_bulkheadPolicy.QueueAvailableCount}");
+                _logger.Info($"Bulkhead/Queue slots: {_bulkheadPolicy.BulkheadAvailableCount}/{_bulkheadPolicy.QueueAvailableCount}");
+
                 response = await _bulkheadPolicy.ExecuteAsync(() => _httpClient.GetAsync(path));
             }
-            catch (BulkheadRejectedException) { }
+            catch (BulkheadRejectedException e)
+            {
+                _logger.LogException(e);
+                response = null;
+            }
 
             return response;
         }
