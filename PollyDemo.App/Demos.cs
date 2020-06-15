@@ -6,7 +6,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using MuirDev.ConsoleTools;
 using Polly;
 using Polly.Bulkhead;
 using Polly.CircuitBreaker;
@@ -15,7 +14,7 @@ using Polly.Timeout;
 
 namespace PollyDemo.App
 {
-    public class Demos
+    public partial class Demos
     {
         public async Task<HttpResponseMessage> RetryWithoutPolly(string path = "/fail/1")
         {
@@ -91,20 +90,20 @@ namespace PollyDemo.App
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
         }
 
-        // public async Task<HttpResponseMessage> HttpRequestException(string path = "/")
-        // {
-        //     var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:4444/api/WeatherForecast") };
+        public async Task<HttpResponseMessage> HttpRequestException(string path = "/")
+        {
+            var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:4444/api/WeatherForecast") };
 
-        //     var policy = Policy
-        //         .Handle<HttpRequestException>()
-        //         .RetryAsync(onRetry: (ex, attempt) =>
-        //         {
-        //             _logger.LogException(ex);
-        //             httpClient = _httpClient;
-        //         });
+            var policy = Policy
+                .Handle<HttpRequestException>()
+                .RetryAsync(onRetry: (ex, attempt) =>
+                {
+                    _logger.LogException(ex);
+                    httpClient = _httpClient;
+                });
 
-        //     return await policy.ExecuteAsync(() => httpClient.GetAsync(path));
-        // }
+            return await policy.ExecuteAsync(() => httpClient.GetAsync(path));
+        }
 
         public async Task<HttpResponseMessage> Delegates(string path = "/auth")
         {
@@ -131,7 +130,7 @@ namespace PollyDemo.App
         {
             var policy = Policy.TimeoutAsync(3);
 
-            HttpResponseMessage response = null;
+            HttpResponseMessage response;
             try
             {
                 response = await policy.ExecuteAsync(async ct =>
@@ -141,7 +140,7 @@ namespace PollyDemo.App
             catch (TimeoutRejectedException e)
             {
                 _logger.LogException(e);
-                return null;
+                response = null;
             }
 
             return response;
@@ -165,16 +164,14 @@ namespace PollyDemo.App
 
         public async Task<HttpResponseMessage> PolicyWrap(string path = "/timeout/3")
         {
+            var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(3);
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
                 .RetryAsync(3);
-
-            var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(3);
-
             var wrappedPolicy = Policy.WrapAsync(retryPolicy, timeoutPolicy);
 
-            HttpResponseMessage response = null;
+            HttpResponseMessage response;
 
             try
             {
@@ -182,35 +179,44 @@ namespace PollyDemo.App
                     await _httpClient.GetAsync(path, ct),
                     CancellationToken.None);
             }
-            catch (TimeoutRejectedException) { }
+            catch (TimeoutRejectedException e) 
+            {
+                _logger.LogException(e);
+                response = null;
+            }
 
             return response;
         }
 
         public async Task<HttpResponseMessage> CircuitBreaker(string path = "/fail")
         {
-            var policy = HttpPolicyExtensions
+            var halfOpenCount = 0;
+            var breakSeconds = 5;
+            var circuitBreakerPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .CircuitBreakerAsync(
                     handledEventsAllowedBeforeBreaking: 3,
-                    durationOfBreak: TimeSpan.FromSeconds(10),
-                    onBreak: (exception, timespan) => _logger.Failure("The circuit is now open and is not allowing calls for the next 10 seconds.", _noEOL),
+                    durationOfBreak: TimeSpan.FromSeconds(breakSeconds),
+                    onBreak: (exception, timespan) => _logger.Failure($"The circuit is now open and is not allowing calls for the next {breakSeconds} seconds.", _noEOL),
                     onReset: () => _logger.Success("The circuit is now closed and all requests will be allowed."),
-                    onHalfOpen: () => _logger.LineFeed().Warning("The circuit is now half-open and will allow one request.")
+                    onHalfOpen: () =>
+                    {
+                        _logger.LineFeed().Warning("The circuit is now half-open and will allow one request.").ReadKey(true);
+                        if (++halfOpenCount > 1) path = happyPath;
+                    }
                 );
 
-            HttpResponseMessage response = null;
+            HttpResponseMessage response;
 
             while (true)
             {
                 try
                 {
-                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
+                    response = await circuitBreakerPolicy.ExecuteAsync(() => _httpClient.GetAsync(path));
                     if (response.IsSuccessStatusCode) break;
                 }
                 catch (BrokenCircuitException)
                 {
-                    path = happyPath;
                     _logger.HandleException(++_exceptionCount);
                 }
             }
@@ -253,13 +259,11 @@ namespace PollyDemo.App
 
         public async Task<HttpResponseMessage> BulkheadIsolation(string path = "/")
         {
-            // await DrillBabyDrill();
             HttpResponseMessage response;
 
             try
             {
-                _logger.Info($"Bulkhead/Queue slots: {_bulkheadPolicy.BulkheadAvailableCount}/{_bulkheadPolicy.QueueAvailableCount}");
-
+                _logger.LogBulkheadSlots(_bulkheadPolicy);
                 response = await _bulkheadPolicy.ExecuteAsync(() => _httpClient.GetAsync(path));
             }
             catch (BulkheadRejectedException e)
@@ -271,16 +275,17 @@ namespace PollyDemo.App
             return response;
         }
 
-        public void ConfigureInStartup()
+        static async Task ConfigureInStartup(string[] args)
         {
+            var path = ComposePath(args);
+            var services = new ServiceCollection();
+
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
                 .RetryAsync(3);
 
             var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);
-
-            var services = new ServiceCollection();
 
             services
                 .AddHttpClient<App>(x =>
@@ -291,19 +296,11 @@ namespace PollyDemo.App
                 })
                 .AddPolicyHandler(retryPolicy)
                 .AddPolicyHandler(timeoutPolicy);
-        }
 
-        #region [Demo Orchestration]
-        private readonly HttpClient _httpClient;
-        private readonly AsyncBulkheadPolicy _bulkheadPolicy = Policy.BulkheadAsync(4, 2);
-        private const string happyPath = "/";
-        private static readonly LogOptions _noEOL = new LogOptions(false);
-        private static readonly AppLogger _logger = new AppLogger();
-        private static int _exceptionCount = 0;
-        public Demos(HttpClient client)
-        {
-            _httpClient = client;
+            var serviceProvider = services.BuildServiceProvider();
+            var app = serviceProvider.GetRequiredService<App>();
+
+            await app.Run(path);
         }
-        #endregion
     }
 }

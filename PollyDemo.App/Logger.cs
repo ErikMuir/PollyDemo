@@ -1,17 +1,21 @@
 using System;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
+using Polly.Bulkhead;
 using MuirDev.ConsoleTools;
 
 namespace PollyDemo.App
 {
-    public class AppLogger : FluentConsole
+    public class Logger : FluentConsole
     {
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
         private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
         private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
         private static readonly LogOptions _forecast = new LogOptions(ConsoleColor.DarkCyan);
+        private static readonly LogOptions _bulkhead = new LogOptions(ConsoleColor.DarkGreen, false);
+        private static readonly LogOptions _queue = new LogOptions(ConsoleColor.DarkGray, false);
 
 
         public void LogRequest()
@@ -48,6 +52,28 @@ namespace PollyDemo.App
         public void HandleException(int exceptionCount)
         {
             if (exceptionCount % 16000 == 0) this.Failure(".", _noEOL);
+        }
+
+        public void LogBulkheadSlots(AsyncBulkheadPolicy policy)
+        {
+            string getSlots(int count)
+            {
+                var slots = new StringBuilder();
+                for (var i = 0; i < count; i++)
+                    slots.Append('\u2610').Append(' ');
+                return slots.ToString();
+            }
+
+            var bulkheadSlots = getSlots(policy.BulkheadAvailableCount);
+            var queueSlots = getSlots(policy.QueueAvailableCount);
+            var originalEncoding = this.OutputEncoding;
+
+            this.SetEncoding(Encoding.Unicode)
+                .Info("Available slots: ", _noEOL)
+                .Info(bulkheadSlots, _bulkhead)
+                .Info(queueSlots, _queue)
+                .LineFeed()
+                .SetEncoding(originalEncoding);
         }
     }
 }
