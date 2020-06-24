@@ -16,13 +16,22 @@ namespace PollyDemo.App
             var path = Helpers.ComposePath(args);
             var services = new ServiceCollection();
 
+            var retryPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .Or<TimeoutRejectedException>()
+                .RetryAsync(3);
+
+            var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);
+
             services
                 .AddHttpClient<App>(x =>
                 {
                     x.BaseAddress = new Uri("http://localhost:5000/api/WeatherForecast");
                     x.DefaultRequestHeaders.Accept.Clear();
                     x.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                });
+                })
+                .AddPolicyHandler(retryPolicy)
+                .AddPolicyHandler(timeoutPolicy);
 
             var serviceProvider = services.BuildServiceProvider();
             var app = serviceProvider.GetRequiredService<App>();

@@ -86,7 +86,6 @@ namespace PollyDemo.App
         private static int _exceptionCount = 0;
         private static readonly HttpResponseMessage _fallbackResponse = new HttpResponseMessage();
         private async Task<HttpResponseMessage> GetResponse(string path) => await Task.FromResult(new HttpResponseMessage());
-        private static string ComposePath(string[] args) => "";
         public Demos(HttpClient client)
         {
             _httpClient = client;

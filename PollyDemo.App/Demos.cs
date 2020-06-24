@@ -245,7 +245,7 @@ namespace PollyDemo.App
 
         static async Task ConfigureInStartup(string[] args)
         {
-            var path = ComposePath(args);
+            var path = Helpers.ComposePath(args);
             var services = new ServiceCollection();
 
             var retryPolicy = HttpPolicyExtensions
