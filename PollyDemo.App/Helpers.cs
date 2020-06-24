@@ -84,7 +84,7 @@ namespace PollyDemo.App
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static readonly Logger _logger = new Logger();
         private static int _exceptionCount = 0;
-        private static readonly HttpResponseMessage _fallbackResponse;
+        private static readonly HttpResponseMessage _fallbackResponse = new HttpResponseMessage();
         private async Task<HttpResponseMessage> GetResponse(string path) => await Task.FromResult(new HttpResponseMessage());
         private static string ComposePath(string[] args) => "";
         public Demos(HttpClient client)
