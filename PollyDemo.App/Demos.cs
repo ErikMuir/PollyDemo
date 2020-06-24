@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,7 +33,7 @@ namespace PollyDemo.App
             return response;
         }
 
-        public async Task<HttpResponseMessage> Retry(string path = "/fail/1")
+        public async Task<HttpResponseMessage> Handling(string path = "/fail/1")
         {
             // handle failures
             // fail 1
@@ -70,12 +69,17 @@ namespace PollyDemo.App
             policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .RetryAsync();
+        }
 
+        public async Task<HttpResponseMessage> Retry(string path = "/fail/1")
+        {
             // problems may last more than an instant
             // fail 3
-            policy = HttpPolicyExtensions
+            var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .RetryAsync(3);
+
+            return await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
 
             // leave some space to give it a chance to recover
             // fail 3
@@ -148,44 +152,27 @@ namespace PollyDemo.App
 
         public async Task<HttpResponseMessage> Fallback(string path = "/fail")
         {
-            var fallbackValue = "Same as today";
-            var fallbackJson = JsonSerializer.Serialize(fallbackValue);
-            var fallbackResponse = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(fallbackJson)
-            };
-
             var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .FallbackAsync(fallbackResponse);
+                .FallbackAsync(_fallbackResponse);
 
             return await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
         }
 
-        public async Task<HttpResponseMessage> PolicyWrap(string path = "/timeout/3")
+        public async Task<HttpResponseMessage> PolicyWrap(string path = "/fail/4")
         {
             var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(3);
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
+                .Or<TimeoutRejectedException>()
                 .RetryAsync(3);
-            var wrappedPolicy = Policy.WrapAsync(retryPolicy, timeoutPolicy);
+            var fallbackPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .FallbackAsync(_fallbackResponse);
 
-            HttpResponseMessage response;
+            var wrappedPolicy = Policy.WrapAsync(fallbackPolicy, retryPolicy, timeoutPolicy);
 
-            try
-            {
-                response = await wrappedPolicy.ExecuteAsync(async ct =>
-                    await _httpClient.GetAsync(path, ct),
-                    CancellationToken.None);
-            }
-            catch (TimeoutRejectedException e) 
-            {
-                _logger.LogException(e);
-                response = null;
-            }
-
-            return response;
+            return await wrappedPolicy.ExecuteAsync(() => _httpClient.GetAsync(path));
         }
 
         public async Task<HttpResponseMessage> CircuitBreaker(string path = "/fail")
@@ -229,32 +216,13 @@ namespace PollyDemo.App
             var policy = HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .AdvancedCircuitBreakerAsync(
-                    failureThreshold: 0.5, // Break on >=50% actions result in handled exceptions...
-                    samplingDuration: TimeSpan.FromSeconds(10), // ... over any 10 second period
-                    minimumThroughput: 8, // ... provided at least 8 actions in the 10 second period.
-                    durationOfBreak: TimeSpan.FromSeconds(10), // Break for 10 seconds.
-                    onBreak: (exception, timespan) => _logger.Failure("The circuit is now open and is not allowing calls for the next 10 seconds.", _noEOL),
-                    onReset: () => _logger.Success("The circuit is now closed and all requests will be allowed."),
-                    onHalfOpen: () => _logger.LineFeed().Warning("The circuit is now half-open and will allow one request.")
+                    durationOfBreak: TimeSpan.FromSeconds(10),  // the circuit breaks for 10 seconds
+                    failureThreshold: 0.1,                      // if there is a 10% failure rate
+                    samplingDuration: TimeSpan.FromSeconds(60), // in a 60 second window
+                    minimumThroughput: 100                      // with a minimum of 100 requests
                 );
 
-            HttpResponseMessage response = null;
-
-            while (true)
-            {
-                try
-                {
-                    response = await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
-                    if (response.IsSuccessStatusCode) break;
-                }
-                catch (BrokenCircuitException)
-                {
-                    path = happyPath;
-                    _logger.HandleException(++_exceptionCount);
-                }
-            }
-
-            return response;
+            return await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
         }
 
         public async Task<HttpResponseMessage> BulkheadIsolation(string path = "/")
@@ -282,7 +250,7 @@ namespace PollyDemo.App
 
             var retryPolicy = HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .Or<TimeoutRejectedException>() // thrown by Polly's TimeoutPolicy if the inner execution times out
+                .Or<TimeoutRejectedException>()
                 .RetryAsync(3);
 
             var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(10);

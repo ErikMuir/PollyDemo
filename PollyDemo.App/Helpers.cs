@@ -1,5 +1,7 @@
+using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using MuirDev.ConsoleTools;
 using Polly;
@@ -42,6 +44,13 @@ namespace PollyDemo.App
         private const string happyPath = "/";
         private static int _exceptionCount;
         private static readonly LogOptions _noEOL = new LogOptions(false);
+        private static readonly string _fallbackValue = "Same as today";
+        private static readonly string _fallbackJson = JsonSerializer.Serialize(_fallbackValue);
+        private static readonly StringContent _fallbackContent = new StringContent(_fallbackJson);
+        private static readonly HttpResponseMessage _fallbackResponse = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = _fallbackContent
+        };
         private static readonly AsyncBulkheadPolicy _bulkheadPolicy = Policy.BulkheadAsync(4, 2);
 
         public App(HttpClient client)
@@ -75,6 +84,7 @@ namespace PollyDemo.App
         private static readonly LogOptions _noEOL = new LogOptions(false);
         private static readonly Logger _logger = new Logger();
         private static int _exceptionCount = 0;
+        private static readonly HttpResponseMessage _fallbackResponse;
         private async Task<HttpResponseMessage> GetResponse(string path) => await Task.FromResult(new HttpResponseMessage());
         private static string ComposePath(string[] args) => "";
         public Demos(HttpClient client)
