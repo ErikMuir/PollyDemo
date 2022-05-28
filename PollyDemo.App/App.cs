@@ -1,35 +1,45 @@
-using System;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using Polly;
-using Polly.Bulkhead;
-using Polly.CircuitBreaker;
-using Polly.Extensions.Http;
-using Polly.Timeout;
-using MuirDev.ConsoleTools;
+namespace PollyDemo.App;
 
-namespace PollyDemo.App
+public partial class App
 {
-    public partial class App
+    private static readonly AppLogger _logger = new AppLogger();
+    private readonly HttpClient _httpClient;
+
+    public App(HttpClient client)
     {
-        public async Task Run(string path)
+        _httpClient = client;
+        _httpClient.GetAsync("/setup").Wait();
+        _logger.Clear();
+    }
+
+    public async Task Run(string path)
+    {
+        #region Drill, Baby, Drill
+        async Task DrillBabyDrill()
         {
-            // await DrillBabyDrill();
+            // utilize all 4 bulkhead slots and 2 queue slots
+            // then one more call to see the bulkhead exception
+            for (var i = 0; i < 7; i++)
+            {
+                await Task.Delay(50);
+                GetResponse("/").GetAwaiter();
+            }
 
-            _logger.LogRequest();
-
-            var response = await GetResponse(path);
-
-            _logger.LogResponse(response);
+            // then wait for a slot to free up
+            await Task.Delay(500);
         }
+        // await DrillBabyDrill();
+        #endregion
 
-        private async Task<HttpResponseMessage> GetResponse(string path)
-        {
-            return await _httpClient.GetAsync(path);
-        }
+        _logger.LogRequest();
+
+        var response = await GetResponse(path);
+
+        _logger.LogResponse(response);
+    }
+
+    private async Task<HttpResponseMessage> GetResponse(string path)
+    {
+        return await _httpClient.GetAsync(path);
     }
 }
