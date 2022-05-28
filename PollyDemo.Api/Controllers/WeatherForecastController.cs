@@ -79,7 +79,7 @@ public class WeatherForecastController : ControllerBase
 
     private string GetForecast() => _summaries[new Random().Next(_summaries.Length)];
 
-    private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string content = null)
+    private async Task<IActionResult> SendResponse(HttpStatusCode statusCode, string? content = null)
     {
         _logger.LogResponse(statusCode, content);
         await Task.Delay(250);

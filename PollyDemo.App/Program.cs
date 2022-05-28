@@ -1,4 +1,4 @@
-var path = Helpers.ComposePath(args);
+var path = Globals.ComposePath(args);
 var services = new ServiceCollection();
 
 services.AddHttpClient<App>(x =>

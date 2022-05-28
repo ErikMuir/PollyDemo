@@ -2,7 +2,6 @@ namespace PollyDemo.App;
 
 public class AppLogger : FluentConsole
 {
-    private static readonly LogOptions _noEOL = new LogOptions(false);
     private static readonly LogOptions _endpoint = new LogOptions(ConsoleColor.DarkYellow);
     private static readonly LogOptions _success = new LogOptions(ConsoleColor.DarkGreen);
     private static readonly LogOptions _failure = new LogOptions(ConsoleColor.DarkRed);
@@ -14,18 +13,18 @@ public class AppLogger : FluentConsole
     public void LogRequest()
     {
         this.LineFeed()
-            .Info("Sending request: ", _noEOL)
+            .Info("Sending request: ", Globals.NoEOL)
             .Info("GET http://localhost:5000/api/WeatherForecast", _endpoint);
     }
 
-    public void LogResponse(HttpResponseMessage response)
+    public void LogResponse(HttpResponseMessage? response)
     {
-        if (response == null) return;
+        if (response is null) return;
         var options = response.IsSuccessStatusCode ? _success : _failure;
         var content = response.Content.ReadAsStringAsync().Result ?? "null";
         try { content = JsonSerializer.Deserialize<string>(content); } catch (Exception) { }
 
-        this.Info("Received response: ", _noEOL)
+        this.Info("Received response: ", Globals.NoEOL)
             .Info($"{(int)response.StatusCode} {response.StatusCode}", options)
             .LineFeed();
 
@@ -44,7 +43,7 @@ public class AppLogger : FluentConsole
 
     public void HandleException(int exceptionCount)
     {
-        if (exceptionCount % 16000 == 0) this.Failure(".", _noEOL);
+        if (exceptionCount % 16000 == 0) this.Failure(".", Globals.NoEOL);
     }
 
     public void LogBulkheadSlots(AsyncBulkheadPolicy policy)
@@ -62,7 +61,7 @@ public class AppLogger : FluentConsole
         var originalEncoding = this.OutputEncoding;
 
         this.SetEncoding(Encoding.Unicode)
-            .Info("Available slots: ", _noEOL)
+            .Info("Available slots: ", Globals.NoEOL)
             .Info(bulkheadSlots, _bulkhead)
             .Info(queueSlots, _queue)
             .LineFeed()

@@ -1,10 +1,19 @@
 namespace PollyDemo.App;
 
-public partial class Demos
+public class Demos
 {
-    public async Task<HttpResponseMessage> RetryWithoutPolly(string path = "/fail/1")
+    private static readonly AppLogger _logger = new AppLogger();
+    private static int _exceptionCount = 0;
+    private readonly HttpClient _httpClient;
+
+    public Demos(HttpClient httpClient)
     {
-        HttpResponseMessage response = null;
+        _httpClient = httpClient;
+    }
+
+    public async Task<HttpResponseMessage?> RetryWithoutPolly(string path = "/fail/1")
+    {
+        HttpResponseMessage? response = null;
 
         const int retryLimit = 3;
 
@@ -20,7 +29,7 @@ public partial class Demos
         return response;
     }
 
-    public async Task<HttpResponseMessage> Handling(string path = "/fail/1")
+    public async Task<HttpResponseMessage?> Handling(string path = "/fail/1")
     {
         // handle failures
         // fail 1
@@ -58,7 +67,7 @@ public partial class Demos
             .RetryAsync();
     }
 
-    public async Task<HttpResponseMessage> Retry(string path = "/fail/1")
+    public async Task<HttpResponseMessage?> Retry(string path = "/fail/1")
     {
         // problems may last more than an instant
         // fail 3
@@ -81,7 +90,7 @@ public partial class Demos
             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2));
     }
 
-    public async Task<HttpResponseMessage> HttpRequestException(string path = "/")
+    public async Task<HttpResponseMessage?> HttpRequestException(string path = "/")
     {
         var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:4444/api/WeatherForecast") };
 
@@ -96,7 +105,7 @@ public partial class Demos
         return await policy.ExecuteAsync(() => httpClient.GetAsync(path));
     }
 
-    public async Task<HttpResponseMessage> Delegates(string path = "/auth")
+    public async Task<HttpResponseMessage?> Delegates(string path = "/auth")
     {
         var expiredToken = new AuthenticationHeaderValue("Bearer", "expired-token");
 
@@ -117,11 +126,11 @@ public partial class Demos
         return await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
     }
 
-    public async Task<HttpResponseMessage> Timeout(string path = "/timeout")
+    public async Task<HttpResponseMessage?> Timeout(string path = "/timeout")
     {
         var policy = Policy.TimeoutAsync(3);
 
-        HttpResponseMessage response;
+        HttpResponseMessage? response;
         try
         {
             response = await policy.ExecuteAsync(async ct =>
@@ -137,16 +146,16 @@ public partial class Demos
         return response;
     }
 
-    public async Task<HttpResponseMessage> Fallback(string path = "/fail")
+    public async Task<HttpResponseMessage?> Fallback(string path = "/fail")
     {
         var policy = HttpPolicyExtensions
             .HandleTransientHttpError()
-            .FallbackAsync(_fallbackResponse);
+            .FallbackAsync(Globals.FallbackResponse);
 
         return await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
     }
 
-    public async Task<HttpResponseMessage> PolicyWrap(string path = "/fail/4")
+    public async Task<HttpResponseMessage?> PolicyWrap(string path = "/fail/4")
     {
         var timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(3);
         var retryPolicy = HttpPolicyExtensions
@@ -155,14 +164,14 @@ public partial class Demos
             .RetryAsync(3);
         var fallbackPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
-            .FallbackAsync(_fallbackResponse);
+            .FallbackAsync(Globals.FallbackResponse);
 
         var wrappedPolicy = Policy.WrapAsync(fallbackPolicy, retryPolicy, timeoutPolicy);
 
         return await wrappedPolicy.ExecuteAsync(() => _httpClient.GetAsync(path));
     }
 
-    public async Task<HttpResponseMessage> CircuitBreaker(string path = "/fail")
+    public async Task<HttpResponseMessage?> CircuitBreaker(string path = "/fail")
     {
         var halfOpenCount = 0;
         var breakSeconds = 5;
@@ -171,16 +180,16 @@ public partial class Demos
             .CircuitBreakerAsync(
                 handledEventsAllowedBeforeBreaking: 3,
                 durationOfBreak: TimeSpan.FromSeconds(breakSeconds),
-                onBreak: (exception, timespan) => _logger.Failure($"The circuit is now open and is not allowing calls for the next {breakSeconds} seconds.", _noEOL),
+                onBreak: (exception, timespan) => _logger.Failure($"The circuit is now open and is not allowing calls for the next {breakSeconds} seconds.", Globals.NoEOL),
                 onReset: () => _logger.Success("The circuit is now closed and all requests will be allowed."),
                 onHalfOpen: () =>
                 {
                     _logger.LineFeed().Warning("The circuit is now half-open and will allow one request.").ReadKey(true);
-                    if (++halfOpenCount > 1) path = happyPath;
+                    if (++halfOpenCount > 1) path = Globals.HappyPath;
                 }
             );
 
-        HttpResponseMessage response;
+        HttpResponseMessage? response;
 
         while (true)
         {
@@ -198,7 +207,7 @@ public partial class Demos
         return response;
     }
 
-    public async Task<HttpResponseMessage> AdvancedCircuitBreaker(string path = "/fail")
+    public async Task<HttpResponseMessage?> AdvancedCircuitBreaker(string path = "/fail")
     {
         var policy = HttpPolicyExtensions
             .HandleTransientHttpError()
@@ -212,14 +221,14 @@ public partial class Demos
         return await policy.ExecuteAsync(() => _httpClient.GetAsync(path));
     }
 
-    public async Task<HttpResponseMessage> BulkheadIsolation(string path = "/")
+    public async Task<HttpResponseMessage?> BulkheadIsolation(string path = "/")
     {
-        HttpResponseMessage response;
+        HttpResponseMessage? response;
 
         try
         {
-            _logger.LogBulkheadSlots(_bulkheadPolicy);
-            response = await _bulkheadPolicy.ExecuteAsync(() => _httpClient.GetAsync(path));
+            _logger.LogBulkheadSlots(Globals.BulkheadPolicy);
+            response = await Globals.BulkheadPolicy.ExecuteAsync(() => _httpClient.GetAsync(path));
         }
         catch (BulkheadRejectedException e)
         {
